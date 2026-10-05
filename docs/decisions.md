@@ -2,6 +2,17 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-05 — Yalnızca sağ/sol yön
+- Aşağı/yukarı görünüm kaldırıldı. Görsel sadece sağa ya da sola bakar. Yatay girdi varsa (çaprazda bile) karakter hemen o yöne döner. Sadece dikey girdide son yatay yön korunur.
+- Saldırı alanı görselin yönünü değil, son hareket yönünü (`aim_direction`) takip eder. Böylece üstteki ve alttaki düşmanlara da vurulabilir.
+- Ders: Eski kod baskın ekseni seçiyordu. Tam çaprazda iki eksen eşit olduğundan dikey yön kazanıyor, karakter sola dönmüyordu.
+
+## 2026-10-05 — Hazır karakter paketleri
+- Zerie'nin Tiny RPG paketlerinden Soldier oyuncu karakteri (Warrior yerine geçici), Orc/Demon/Blood Monster düşman olarak eklendi. Vahşi bölgede her bölük bir türden oluşuyor.
+- Paket yalnızca yandan (sağa bakan) görünüm içeriyor.
+- Ayak hizası artık görselin çizili en alt pikseline göre hesaplanıyor; böylece etrafında boşluk olan sprite sheet'ler de doğru hizalanıyor.
+- Paket kareleri 100×100'den, tüm animasyonların ortak dolu alanına kırpıldı. Kırpma yatayda simetrik, aynalanınca karakter kaymıyor.
+
 ## 2026-10-05 — Warrior demosu
 - Görseller isimlendirme kuralıyla (`<animasyon>_<yön>_<NN>.png`) çalışma anında yüklenir. Kullanıcı görsel değiştirince kod değişmez.
 - Çözünürlük 480×270, tam sayı ölçekleme, Nearest doku filtresi, piksel yakalama (snap) açık, ekran yatay.

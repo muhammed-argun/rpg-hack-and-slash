@@ -6,12 +6,8 @@ extends CharacterBody2D
 
 enum State { NORMAL, ATTACK, HURT, DEAD }
 
-const FACING_VECTORS := {
-	"down": Vector2.DOWN,
-	"up": Vector2.UP,
-	"right": Vector2.RIGHT,
-	"left": Vector2.LEFT,
-}
+# Joystick'teki çok küçük yatay sapmalar karakteri döndürmesin diye
+const TURN_THRESHOLD := 0.1
 
 @export var move_speed: float = 120.0
 ## Saldırı animasyonunun kaçıncı karesinde hasar verileceği (0'dan başlar)
@@ -20,7 +16,10 @@ const FACING_VECTORS := {
 @export var attack_reach: float = 16.0
 
 var state: State = State.NORMAL
-var facing: String = "down"
+## Görselin baktığı yön: "right" ya da "left". Yalnızca yatay girdiyle değişir.
+var facing: String = "right"
+## Saldırının yöneldiği yön: son hareket yönü (çapraz ve dikey dahil)
+var aim_direction: Vector2 = Vector2.RIGHT
 var _hit_done := false
 
 @onready var sprite: CharacterSprite = $Sprite
@@ -51,7 +50,12 @@ func _physics_process(_delta: float) -> void:
 func _process_normal() -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if input != Vector2.ZERO:
-		facing = _direction_name(input)
+		aim_direction = input.normalized()
+	# Sağ ya da sol girdisi varsa (yukarı/aşağı ile birlikte olsa bile) hemen o yöne dön
+	if input.x > TURN_THRESHOLD:
+		facing = "right"
+	elif input.x < -TURN_THRESHOLD:
+		facing = "left"
 
 	# Basılı tutulduğu sürece saldırmaya devam eder
 	if Input.is_action_pressed("attack"):
@@ -66,7 +70,7 @@ func _start_attack() -> void:
 	state = State.ATTACK
 	_hit_done = false
 	velocity = Vector2.ZERO
-	attack_area.position = FACING_VECTORS[facing] * attack_reach + Vector2(0, -8)
+	attack_area.position = aim_direction * attack_reach + Vector2(0, -8)
 	sprite.play_directional("attack", facing, true)
 	if not sprite.has_directional("attack"):
 		# Saldırı görseli yoksa hasarı hemen ver
@@ -143,9 +147,3 @@ func _on_sprite_animation_finished() -> void:
 func _flash() -> void:
 	modulate = Color(1, 0.4, 0.4)
 	create_tween().tween_property(self, "modulate", Color.WHITE, 0.2)
-
-
-func _direction_name(direction: Vector2) -> String:
-	if absf(direction.x) > absf(direction.y):
-		return "right" if direction.x > 0 else "left"
-	return "down" if direction.y > 0 else "up"

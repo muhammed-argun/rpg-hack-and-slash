@@ -10,7 +10,9 @@ const TILESET_PATH := "res://assets/tiles/tileset.tres"
 const TOWN_PATH := "res://scenes/maps/town.tscn"
 const WILD_PATH := "res://scenes/maps/wild.tscn"
 const EXIT_SCENE := "res://scenes/world/map_exit.tscn"
-const GOBLIN_SCENE := "res://scenes/enemies/goblin.tscn"
+const ORC_SCENE := "res://scenes/enemies/orc.tscn"
+const BLOOD_MONSTER_SCENE := "res://scenes/enemies/blood_monster.tscn"
+const DEMON_SCENE := "res://scenes/enemies/demon.tscn"
 const TILE := 32
 
 # Tileset içindeki kare sırası (assets/tiles/tileset.png, soldan sağa)
@@ -139,7 +141,7 @@ func _add_exit(parts: Dictionary, exit_name: String, center_cell: Vector2, size_
 	_add(parts["map"], parts["exits"], exit)
 
 
-func _add_enemy_group(parts: Dictionary, group_name: String, cell: Vector2, count: int, loot_level: int) -> void:
+func _add_enemy_group(parts: Dictionary, group_name: String, cell: Vector2, count: int, loot_level: int, enemy_scene: String) -> void:
 	var group := Node2D.new()
 	group.set_script(load("res://scripts/enemies/enemy_group.gd"))
 	group.name = group_name
@@ -149,10 +151,10 @@ func _add_enemy_group(parts: Dictionary, group_name: String, cell: Vector2, coun
 	_add(parts["map"], parts["entities"], group)
 	var offsets := [Vector2(-20, -10), Vector2(18, -6), Vector2(0, 16), Vector2(-14, 20)]
 	for i in count:
-		var goblin := (load(GOBLIN_SCENE) as PackedScene).instantiate()
-		goblin.name = "Goblin%d" % (i + 1)
-		goblin.position = offsets[i % offsets.size()]
-		_add(parts["map"], group, goblin)
+		var enemy := (load(enemy_scene) as PackedScene).instantiate()
+		enemy.name = "%s%d" % [enemy.name, i + 1]
+		enemy.position = offsets[i % offsets.size()]
+		_add(parts["map"], group, enemy)
 
 
 func _save_map(parts: Dictionary, path: String) -> void:
@@ -196,7 +198,7 @@ func _build_town(tileset: TileSet) -> void:
 
 
 # --- Vahşi bölge (64x40) ---------------------------------------------------
-# Doğuda şehre dönüş. 3 goblin bölüğü.
+# Doğuda şehre dönüş. 3 düşman bölüğü: orklar, kan canavarları, iblisler.
 
 func _build_wild(tileset: TileSet) -> void:
 	var size := Vector2i(64, 40)
@@ -212,7 +214,12 @@ func _build_wild(tileset: TileSet) -> void:
 	_border(walls, size, T.TREE, [Rect2i(63, 18, 1, 4)])
 	_fill(walls, Rect2i(18, 7, 6, 4), T.WATER)
 
-	var groups := {"GoblinGroup1": [Vector2(44, 11), 2, 1], "GoblinGroup2": [Vector2(20, 27), 3, 1], "GoblinGroup3": [Vector2(10, 15), 3, 2]}
+	# Bölük adı: [konum (kare), düşman sayısı, ganimet seviyesi, düşman sahnesi]
+	var groups := {
+		"EnemyGroup1": [Vector2(44, 11), 2, 1, ORC_SCENE],
+		"EnemyGroup2": [Vector2(20, 27), 3, 1, BLOOD_MONSTER_SCENE],
+		"EnemyGroup3": [Vector2(10, 15), 2, 2, DEMON_SCENE],
+	}
 
 	# Rastgele ağaçlar (yollardan, gölden, bölüklerden ve girişten uzak)
 	var rng := RandomNumberGenerator.new()
@@ -236,5 +243,5 @@ func _build_wild(tileset: TileSet) -> void:
 	_add_exit(parts, "ExitEast", Vector2(63.5, 20), Vector2(1, 4), TOWN_PATH, "from_wild")
 	for group_name: String in groups:
 		var info: Array = groups[group_name]
-		_add_enemy_group(parts, group_name, info[0], info[1], info[2])
+		_add_enemy_group(parts, group_name, info[0], info[1], info[2], info[3])
 	_save_map(parts, WILD_PATH)

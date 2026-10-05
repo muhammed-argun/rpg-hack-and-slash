@@ -14,10 +14,14 @@ collision_layer = 2
 collision_mask = 5
 motion_mode = 1
 script = ExtResource("1_player")
+attack_hit_frame = 3
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 script = ExtResource("2_sprite")
-sprite_folder = "res://assets/characters/warrior"
+sprite_folder = "res://assets/characters/soldier"
+fps_overrides = {
+"idle": 8.0
+}
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -4)

@@ -12,7 +12,7 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 ## Grafik Üretimi
 - **[Öneri]** Grafikler gelene kadar yer tutucu (placeholder) görseller ya da ücretsiz bir asset paketi kullanılır. Kod grafiklere bağlı olmadan yazılır.
 - **[Öneri]** Yapay zekâ konsept tasarım, eşya ikonları ve portreler için kullanılır. Tile ve animasyonlu karakterlerde yapay zekâ çıktısı elle temizlenir ya da asset paketlerinden yararlanılır.
-- **[Öneri]** Karakterler 4 yönlü çizilir (aşağı, yukarı, sağ). Sol yön, sağ yönün yansıtılmasıyla elde edilir.
+- **[Karar]** Karakterler yandan görünür, yalnızca sağa bakan kareler çizilir. Sol yön, sağ yönün aynalanmasıyla elde edilir. Aşağı/yukarı yön yoktur.
 
 ## Dünya ve Haritalar
 - **[Karar]** Dünya, birbirine bağlı ayrı haritalardan oluşur. Her harita kendi sahnesidir.

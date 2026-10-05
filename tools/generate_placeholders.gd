@@ -9,7 +9,8 @@ extends SceneTree
 const FRAME := 32
 const OUTLINE := Color(0.08, 0.08, 0.1)
 const STEEL := Color(0.78, 0.82, 0.9)
-const FACING := {"down": Vector2.DOWN, "up": Vector2.UP, "right": Vector2.RIGHT}
+# Karakterler yandan görünür; yalnızca sağ yön çizilir, sol yön oyunda aynalanır
+const FACING := {"right": Vector2.RIGHT}
 # Yer tutucu kare sayıları; kendi çizimlerinde istediğin kadar kare kullanabilirsin
 const FRAME_COUNTS := {"idle": 2, "walk": 4, "attack": 4, "hurt": 2, "death": 4}
 
@@ -57,15 +58,12 @@ func _character_frame(anim: String, dir: String, i: int, body: Color) -> Image:
 	var sword_length := 0
 	if anim == "attack":
 		sword_length = [3, 7, 11, 6][i]
-	# Yukarı bakarken kılıç gövdenin arkasında kalır
-	if sword_length > 0 and dir == "up":
-		_draw_sword(img, center, facing, radius, sword_length)
 	_draw_circle(img, center, radius, OUTLINE)
 	_draw_circle(img, center, radius - 1.0, color)
-	if sword_length > 0 and dir != "up":
+	if sword_length > 0:
 		_draw_sword(img, center, facing, radius, sword_length)
 	if anim != "death" or i == 0:
-		_draw_eyes(img, center, dir)
+		_draw_eye(img, center)
 	return img
 
 
@@ -78,13 +76,9 @@ func _draw_sword(img: Image, center: Vector2, facing: Vector2, radius: float, le
 		_px(img, p + side, STEEL.darkened(0.25))
 
 
-func _draw_eyes(img: Image, center: Vector2, dir: String) -> void:
-	match dir:
-		"down":
-			_rect(img, Rect2i(int(center.x) - 4, int(center.y), 2, 2), OUTLINE)
-			_rect(img, Rect2i(int(center.x) + 2, int(center.y), 2, 2), OUTLINE)
-		"right":
-			_rect(img, Rect2i(int(center.x) + 3, int(center.y) - 1, 2, 2), OUTLINE)
+# Sağa bakan göz (baktığı yönü belli eder)
+func _draw_eye(img: Image, center: Vector2) -> void:
+	_rect(img, Rect2i(int(center.x) + 3, int(center.y) - 1, 2, 2), OUTLINE)
 
 
 # --- Sandık ----------------------------------------------------------------

@@ -1,5 +1,5 @@
 extends Node
-## Otomatik duman testi: oyunu başlatır, vahşi bölgeye geçer, bir goblin bölüğüyle
+## Otomatik duman testi: oyunu başlatır, vahşi bölgeye geçer, bir düşman bölüğüyle
 ## savaşır, sandığı açar ve sonuçları konsola yazar. Ekran görüntülerini user:// klasörüne kaydeder.
 ##
 ## Çalıştırma (proje klasöründe):
@@ -17,9 +17,23 @@ func _ready() -> void:
 	await _frames(20)
 	_check(_main.current_map.name == "Town", "Oyun şehirde başlamalı")
 	_screenshot("01_town")
+	var player: Player = _main.player
+
+	# Yön: sağ+yukarı -> sağa bakar; yukarı basılıyken sola geçince hemen sola döner
+	Input.action_press("move_right")
+	Input.action_press("move_up")
+	await _frames(5)
+	_check(player.facing == "right" and not player.sprite.flip_h, "Sağ+yukarıda karakter sağa bakmalı")
+	Input.action_release("move_right")
+	Input.action_press("move_left")
+	await _frames(5)
+	_check(player.facing == "left" and player.sprite.flip_h, "Yukarı basılıyken sola geçince karakter sola dönmeli")
+	Input.action_release("move_left")
+	await _frames(5)
+	_check(player.facing == "left", "Sadece yukarı basılıyken son yatay yön korunmalı")
+	Input.action_release("move_up")
 
 	# Batıya yürü, çıkıştan vahşi bölgeye geç
-	var player: Player = _main.player
 	player.global_position = _main.current_map.get_spawn_position("from_wild") + Vector2(-40, 0)
 	Input.action_press("move_left")
 	await _frames(30)
@@ -28,8 +42,8 @@ func _ready() -> void:
 	_check(_main.current_map.name == "Wild", "Batı çıkışı vahşi bölgeye götürmeli")
 	_screenshot("02_wild")
 
-	# İlk goblin bölüğünün yanına git ve saldır
-	var group := _main.current_map.get_node("Entities/GoblinGroup1") as EnemyGroup
+	# İlk düşman bölüğünün yanına git ve saldır
+	var group := _main.current_map.get_node("Entities/EnemyGroup1") as EnemyGroup
 	player.global_position = group.global_position + Vector2(0, 40)
 	var gold_before := GameState.gold
 	Input.action_press("attack")
@@ -37,8 +51,10 @@ func _ready() -> void:
 	while _alive_enemies(group) > 0 and waited < 900:
 		var target := _nearest_enemy(group, player)
 		if target:
-			# Hedefe doğru dön (saldırı yönü baktığı yöne göre belirlenir)
-			player.facing = _direction_name(target.global_position - player.global_position)
+			# Hedefe doğru nişan al (joystick'i hedefe doğru tutmak gibi)
+			var to_target := target.global_position - player.global_position
+			player.aim_direction = to_target.normalized()
+			player.facing = "right" if to_target.x >= 0 else "left"
 			if player.global_position.distance_to(target.global_position) > 18.0:
 				player.global_position = player.global_position.move_toward(target.global_position, 2.0)
 		if waited == 60:
@@ -46,7 +62,7 @@ func _ready() -> void:
 		await _frames(1)
 		waited += 1
 	Input.action_release("attack")
-	_check(_alive_enemies(group) == 0, "Bölükteki tüm goblinler ölmeli")
+	_check(_alive_enemies(group) == 0, "Bölükteki tüm düşmanlar ölmeli")
 	print("Savaş süresi: %d kare, oyuncu canı: %d/%d" % [waited, GameState.hp, GameState.max_hp])
 
 	# Sandığın düşmesini bekle ve üstüne yürü
@@ -112,12 +128,6 @@ func _nearest_enemy(group: EnemyGroup, player: Player) -> Enemy:
 			if best == null or player.global_position.distance_to(enemy.global_position) < player.global_position.distance_to(best.global_position):
 				best = enemy
 	return best
-
-
-func _direction_name(direction: Vector2) -> String:
-	if absf(direction.x) > absf(direction.y):
-		return "right" if direction.x > 0 else "left"
-	return "down" if direction.y > 0 else "up"
 
 
 func _screenshot(file_name: String) -> void:

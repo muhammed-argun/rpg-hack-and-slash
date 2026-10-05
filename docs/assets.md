@@ -1,6 +1,22 @@
 # Görsel (Asset) Rehberi
 
-Oyundaki tüm görseller şu an **yer tutucu**: beyaz top (Warrior), kırmızı top (Goblin), basit sandık, kare zeminler.
+## Şu an kullanılan görseller
+| Karakter | Klasör | Kaynak |
+|---|---|---|
+| Oyuncu (Warrior yerine geçici) | `assets/characters/soldier/` | Tiny RPG Character Asset Pack 01 (Zerie) |
+| Orc | `assets/enemies/orc/` | Tiny RPG Character Asset Pack 01 (Zerie) |
+| Demon | `assets/enemies/demon/` | Tiny RPG Character Asset Pack 02 (Zerie) |
+| Blood Monster | `assets/enemies/blood_monster/` | Tiny RPG Character Asset Pack 02 (Zerie) |
+| Warrior (yer tutucu, beyaz top) | `assets/characters/warrior/` | Kendi çizimin buraya gelecek |
+| Goblin (yer tutucu, kırmızı top) | `assets/enemies/goblin/` | Haritalarda kullanılmıyor, yeni düşman şablonu |
+
+Hazır paketler `ReadyAssetSets/` klasöründe ham hâlleriyle duruyor. Bu klasörde bir `.gdignore` dosyası var, bu yüzden Godot onu yok sayıyor ve oyuna dahil etmiyor. Paketteki sprite sheet'ler `tools/import_tiny_rpg_pack.gd` aracıyla karelere bölündü:
+```
+godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd
+```
+Oyuncuyu kendi Warrior çizimine geri döndürmek için `scenes/player/player.tscn` sahnesinde `Sprite` node'unun `Sprite Folder` alanını `res://assets/characters/warrior` yap.
+
+Sandık, zemin ve arayüz görselleri hâlâ **yer tutucu**.
 Kod görselleri **dosya adına göre** otomatik yüklüyor. Bir dosyayı **aynı isimle** değiştirdiğinde oyunda senin çizimin görünür. Kodda hiçbir şeyi değiştirmen gerekmez.
 
 ## Temel kurallar
@@ -9,6 +25,14 @@ Kod görselleri **dosya adına göre** otomatik yüklüyor. Bir dosyayı **aynı
 - Karakter kareleri: önerilen **32×32**. Daha büyük de olabilir (ör. 48×48), ama bir animasyonun bütün kareleri aynı boyutta olmalı.
 - Karakterin **ayakları görselin alt kenarına** yakın olmalı. Kod, görselin alt kenarını karakterin bastığı nokta kabul eder.
 - Görseli değiştirdikten sonra Godot editörüne geçmen yeterli. Godot yeni dosyayı otomatik içe aktarır.
+
+## Çizim ve dışa aktarma (Illustrator / Photoshop)
+- Her kare için 32×32 piksellik bir alan kullan. Karakterin boyu bunun içinde 20-26 piksel olsun, ayakların altında 1-2 piksel boşluk bırak.
+- Tüm karelerde karakterin ayak hizası ve yatay merkezi aynı yerde olmalı, yoksa animasyon titrer.
+- **Kenar yumuşatma (anti-aliasing) kapalı olmalı.** Açık kalırsa kenarlar bulanık, yarı saydam piksellerle çıkar.
+- 1x ölçekte, 72 ppi dışa aktar. Büyütmeyi oyun kendisi yapar.
+- **Illustrator:** Her kare için ayrı bir 32×32 artboard aç ve artboard'a dosya adını ver (ör. `walk_right_01`). View → Pixel Preview'u aç, nesneleri piksel ızgarasına hizala. File → Export → Export for Screens ile PNG olarak, 1x ölçekte dışa aktar. Ayarlarda (dişli simgesi) Anti-aliasing: **None** seç. Dosyalar artboard adlarıyla kaydedilir.
+- **Photoshop:** 32×32 px belge aç. Fırça yerine **Pencil** aracını kullan. Preferences → General → Image Interpolation: **Nearest Neighbor** seç. File → Export → Export As → PNG ile kaydet.
 
 ## Karakter animasyonları
 
@@ -26,7 +50,7 @@ Dosya adı kuralı: **`<animasyon>_<yön>_<kare numarası>.png`**
 | `hurt` | Hasar alınca | 2 | Hayır |
 | `death` | Ölünce | 4 | Hayır |
 
-Yönler: `down` (aşağı), `up` (yukarı), `right` (sağ), `left` (sol)
+Yönler: `right` (sağ) ve isteğe bağlı `left` (sol). Karakterler yandan görünür, aşağı/yukarı yön yoktur. Yukarı ya da aşağı giderken karakter en son baktığı yana bakar. Çapraz giderken (ör. sol+yukarı) hemen o yana döner.
 
 Örnek: Warrior'ın sağa yürüme animasyonu
 ```
@@ -39,6 +63,8 @@ assets/characters/warrior/walk_right_04.png
 ### Esnek kurallar
 - **Kare sayısı serbest.** Kod `01`'den başlayıp ilk eksik numaraya kadar okur. Yürüme 6 kare olacaksa `walk_right_05.png` ve `walk_right_06.png` dosyalarını eklemen yeterli. Daha az kare kullanacaksan fazla dosyaları sil.
 - **Sol yön isteğe bağlı.** `*_left_*` dosyaları yoksa sağ yön aynalanarak kullanılır. Yer tutucularda sol yön bu yüzden yok.
+- **Saldırı yönü:** Görsel sadece sağa ya da sola baksa da saldırı son hareket yönüne gider. Yukarı yürüyüp saldırırsan üstteki düşmana vurursun.
+- **Görselin altındaki boşluk sorun değil.** Kod, karakterin çizili en alt pikselini (ayak ya da gölge) yere basan nokta kabul eder.
 - **Saldırının vuruş anı:** Hasar, saldırı animasyonunun **3. karesinde** (`attack_*_03`) verilir. Bunu değiştirmek için Godot'da Player ya da Goblin sahnesindeki `Attack Hit Frame` değerini ayarla (0'dan başlar, yani 2 = 3. kare).
 - **Animasyon hızı:** Saniyedeki kare sayısı: idle 4, walk 8, attack 12, hurt 10, death 8. Değiştirmek için sahnedeki `Sprite` node'unun `Fps Overrides` alanına örneğin `{"walk": 10.0}` yaz.
 

@@ -28,7 +28,8 @@ Bu dosya her Claude oturumunun başında otomatik okunur. Kalıcı kurallar ve k
 - `scenes/` sahneler: `main.tscn` (ana sahne), `maps/`, `player/`, `enemies/`, `objects/`, `world/`, `ui/`
 - `scripts/` scriptler, sahnelerle aynı alt klasör düzeninde; `autoload/game_state.gd` = GameState
 - `tools/` geliştirme araçları (oyuna dahil değil)
-- `docs/` belgeler
+- `docs/` belgeler; dış kaynaklı asset'ler `docs/credits.md` dosyasına işlenir
+- `ReadyAssetSets/` indirilen ham asset paketleri (`.gdignore` ile Godot'dan gizli)
 
 ## Mimari
 - `Main` haritaları yükler; oyuncu tek bir instance olarak haritalar arasında taşınır
@@ -42,6 +43,8 @@ Bu dosya her Claude oturumunun başında otomatik okunur. Kalıcı kurallar ve k
 Godot: `E:\GodotSetup\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
 - Duman testi (oyunu otomatik oynar, sonucu yazar): `godot --path . res://tools/smoke_test.tscn`
 - Eksik yer tutucu görselleri üret: `godot --headless --path . --script res://tools/generate_placeholders.gd`
+- Tiny RPG paketini karelere böl: `godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd`
+- Demo haritalarını üret (var olanların üzerine yazmaz): `godot --headless --path . res://tools/build_demo_maps.tscn`
 - Script değişikliğinden sonra hata kontrolü: `godot --headless --path . --import`
 - Not: `--script` modunda autoload'lar yüklenmez. Oyun scriptlerini kullanan araçlar sahne olarak çalıştırılır.
 

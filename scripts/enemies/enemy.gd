@@ -23,7 +23,8 @@ enum State { IDLE, CHASE, RETURN, ATTACK, HURT, DEAD }
 
 var hp: int
 var state: State = State.IDLE
-var facing: String = "down"
+## Görselin baktığı yön: "right" ya da "left"
+var facing: String = "right"
 var _home: Vector2
 var _cooldown := 0.0
 var _hit_done := false
@@ -155,13 +156,12 @@ func _distance_to_player() -> float:
 	return global_position.distance_to(_player.global_position)
 
 
+# Yalnızca yatay bileşene göre döner; tam dikey harekette son yönünü korur
 func _face(direction: Vector2) -> void:
-	if direction == Vector2.ZERO:
-		return
-	if absf(direction.x) > absf(direction.y):
-		facing = "right" if direction.x > 0 else "left"
-	else:
-		facing = "down" if direction.y > 0 else "up"
+	if direction.x > 0.01:
+		facing = "right"
+	elif direction.x < -0.01:
+		facing = "left"
 
 
 func _flash() -> void:

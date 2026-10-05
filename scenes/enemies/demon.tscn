@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="2_sprite"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="3_bar"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 6.0
+
+[node name="Demon" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_enemy")
+max_hp = 90
+damage = 14
+move_speed = 60.0
+detect_radius = 130.0
+attack_range = 24.0
+attack_hit_frame = 4
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+script = ExtResource("2_sprite")
+sprite_folder = "res://assets/enemies/demon"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("CircleShape2D_body")
+
+[node name="HealthBar" type="Node2D" parent="."]
+position = Vector2(0, -26)
+script = ExtResource("3_bar")
