@@ -2,6 +2,16 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-05 — Warrior demosu
+- Görseller isimlendirme kuralıyla (`<animasyon>_<yön>_<NN>.png`) çalışma anında yüklenir. Kullanıcı görsel değiştirince kod değişmez.
+- Çözünürlük 480×270, tam sayı ölçekleme, Nearest doku filtresi, piksel yakalama (snap) açık, ekran yatay.
+- Sol yön görselleri isteğe bağlı: yoksa sağ yön aynalanır.
+- Sandık, bölüğün son düşmanının öldüğü yere düşer. Oyuncu üstüne yürüyünce açılır. Daha iyi eşya otomatik kuşanılır.
+- Saldırı butonu basılı tutulunca sürekli saldırılır (mobilde rahatlık için).
+- Ölünce 2 saniye sonra şehirde tam canla doğulur (şimdilik ceza yok).
+- Ders: Godot 4.7'de yerleşik `VirtualJoystick` sınıfı var, aynı adla `class_name` tanımlanamaz.
+- Ders: `--script` ile çalışan araçlarda autoload'lar yüklenmez. Ayrıca kodla oluşturulan InputEventKey'ler `device = -1` olmalı, yoksa klavye çalışmaz.
+
 ## 2026-10-05 — Temel tercihler
 - Oyun 2D olacak, hedef platform Android.
 - Kod yorumları Türkçe, tanımlayıcılar İngilizce.

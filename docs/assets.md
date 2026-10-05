@@ -1,0 +1,92 @@
+# Görsel (Asset) Rehberi
+
+Oyundaki tüm görseller şu an **yer tutucu**: beyaz top (Warrior), kırmızı top (Goblin), basit sandık, kare zeminler.
+Kod görselleri **dosya adına göre** otomatik yüklüyor. Bir dosyayı **aynı isimle** değiştirdiğinde oyunda senin çizimin görünür. Kodda hiçbir şeyi değiştirmen gerekmez.
+
+## Temel kurallar
+- Format: **PNG**, şeffaf arka plan
+- Kare (tile) boyutu: **32×32 piksel**
+- Karakter kareleri: önerilen **32×32**. Daha büyük de olabilir (ör. 48×48), ama bir animasyonun bütün kareleri aynı boyutta olmalı.
+- Karakterin **ayakları görselin alt kenarına** yakın olmalı. Kod, görselin alt kenarını karakterin bastığı nokta kabul eder.
+- Görseli değiştirdikten sonra Godot editörüne geçmen yeterli. Godot yeni dosyayı otomatik içe aktarır.
+
+## Karakter animasyonları
+
+Klasörler:
+- Warrior: `assets/characters/warrior/`
+- Goblin: `assets/enemies/goblin/`
+
+Dosya adı kuralı: **`<animasyon>_<yön>_<kare numarası>.png`**
+
+| Animasyon | Ne zaman oynar | Yer tutucu kare sayısı | Döngü |
+|---|---|---|---|
+| `idle` | Dururken | 2 | Evet |
+| `walk` | Yürürken | 4 | Evet |
+| `attack` | Saldırırken | 4 | Hayır |
+| `hurt` | Hasar alınca | 2 | Hayır |
+| `death` | Ölünce | 4 | Hayır |
+
+Yönler: `down` (aşağı), `up` (yukarı), `right` (sağ), `left` (sol)
+
+Örnek: Warrior'ın sağa yürüme animasyonu
+```
+assets/characters/warrior/walk_right_01.png
+assets/characters/warrior/walk_right_02.png
+assets/characters/warrior/walk_right_03.png
+assets/characters/warrior/walk_right_04.png
+```
+
+### Esnek kurallar
+- **Kare sayısı serbest.** Kod `01`'den başlayıp ilk eksik numaraya kadar okur. Yürüme 6 kare olacaksa `walk_right_05.png` ve `walk_right_06.png` dosyalarını eklemen yeterli. Daha az kare kullanacaksan fazla dosyaları sil.
+- **Sol yön isteğe bağlı.** `*_left_*` dosyaları yoksa sağ yön aynalanarak kullanılır. Yer tutucularda sol yön bu yüzden yok.
+- **Saldırının vuruş anı:** Hasar, saldırı animasyonunun **3. karesinde** (`attack_*_03`) verilir. Bunu değiştirmek için Godot'da Player ya da Goblin sahnesindeki `Attack Hit Frame` değerini ayarla (0'dan başlar, yani 2 = 3. kare).
+- **Animasyon hızı:** Saniyedeki kare sayısı: idle 4, walk 8, attack 12, hurt 10, death 8. Değiştirmek için sahnedeki `Sprite` node'unun `Fps Overrides` alanına örneğin `{"walk": 10.0}` yaz.
+
+## Sandık
+| Dosya | Açıklama |
+|---|---|
+| `assets/objects/chest_closed.png` | Kapalı sandık |
+| `assets/objects/chest_open.png` | Açık sandık |
+
+## Tileset (zemin ve engeller)
+Dosya: `assets/tiles/tileset.png`. **192×32** boyutunda, yan yana 6 kare (her biri 32×32):
+
+| Sıra | Kare | Engel mi? |
+|---|---|---|
+| 0 | Çimen | Hayır |
+| 1 | Toprak yol | Hayır |
+| 2 | Parke taşı | Hayır |
+| 3 | Duvar | Evet |
+| 4 | Ağaç | Evet (sadece gövde) |
+| 5 | Su | Evet |
+
+Bu dosyayı **aynı düzenle** çizersen haritalar otomatik olarak senin grafiklerinle görünür. Daha fazla çeşit (çiçekli çimen, köşe parçaları, ev çatısı vb.) istediğinde Godot'da yeni bir tileset kurarız.
+
+## Arayüz
+| Dosya | Boyut | Açıklama |
+|---|---|---|
+| `assets/ui/joystick_base.png` | 48×48 | Joystick'in dış halkası |
+| `assets/ui/joystick_knob.png` | 22×22 | Joystick'in kolu |
+| `assets/ui/button_attack.png` | 40×40 | Saldırı butonu |
+| `assets/ui/button_potion.png` | 28×28 | İksir butonu |
+
+## Yeni düşman türü eklemek
+1. `scenes/enemies/goblin.tscn` dosyasını kopyala (ör. `skeleton.tscn`).
+2. Görsellerini `assets/enemies/skeleton/` klasörüne aynı isimlendirmeyle koy.
+3. Yeni sahnede `Sprite` node'unun `Sprite Folder` alanını `res://assets/enemies/skeleton` yap.
+4. Kök node'da can, hasar, hız gibi değerleri ayarla.
+
+## Harita düzenlemek
+- Haritalar: `scenes/maps/town.tscn` (şehir, 48×32) ve `scenes/maps/wild.tscn` (vahşi bölge, 64×40)
+- **Ground** katmanı zemindir (çimen, yol). **Entities/Walls** katmanı engellerdir (duvar, ağaç, su).
+- Düşman bölüğü eklemek: `Entities` altına bir **EnemyGroup** node'u ekle, içine `goblin.tscn` sahnelerini sürükle. Bölükteki herkes ölünce sandık düşer.
+- Yeni harita bağlamak için:
+  - `Exits` altına `scenes/world/map_exit.tscn` ekle, `Target Map` ve `Target Spawn` alanlarını doldur.
+  - Hedef haritada `Spawns` altına aynı isimde bir **Marker2D** koy.
+  - Haritanın boyutu değişirse kök node'daki `Map Size` değerini güncelle.
+
+## Yer tutucuları yeniden üretmek
+Bir görseli silersen yer tutucusunu geri getirebilirsin. Araç var olan dosyaların üzerine yazmaz, sadece eksik olanları oluşturur:
+```
+godot --headless --path . --script res://tools/generate_placeholders.gd
+```
