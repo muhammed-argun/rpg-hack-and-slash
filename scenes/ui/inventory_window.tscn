@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory_window.gd" id="1_inventory"]
+[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/check.png" id="2_check"]
+[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/cross.png" id="3_cross"]
+
+[node name="InventoryWindow" type="PanelContainer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -148.0
+offset_top = -100.0
+offset_right = 148.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_inventory")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="Box"]
+layout_mode = 2
+theme_type_variation = &"Title"
+text = "Envanter"
+
+[node name="Tabs" type="TabContainer" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+current_tab = 0
+
+[node name="BagGrid" type="GridContainer" parent="Box/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 6
+metadata/_tab_index = 0
+
+[node name="Gear" type="Label" parent="Box/Tabs"]
+visible = false
+layout_mode = 2
+text = "Yakında"
+metadata/_tab_index = 1
+
+[node name="Separator" type="HSeparator" parent="Box"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+text = "Bir eşyaya dokun."
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="UseButton" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Kullan"
+icon = ExtResource("2_check")
+
+[node name="CloseButton" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Kapat"
+icon = ExtResource("3_cross")

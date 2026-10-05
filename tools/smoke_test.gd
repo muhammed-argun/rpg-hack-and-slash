@@ -1,6 +1,6 @@
 extends Node
-## Otomatik duman testi: oyunu başlatır, vahşi bölgeye geçer, bir düşman bölüğüyle
-## savaşır, sandığı açar ve sonuçları konsola yazar. Ekran görüntülerini user:// klasörüne kaydeder.
+## Otomatik duman testi: oyunu başlatır, vahşi bölgeye geçer, düşmanlarla savaşır (özel saldırılar
+## dahil), yeteneği, iksirleri ve envanteri dener, sonuçları konsola yazar. Ekran görüntülerini user:// klasörüne kaydeder.
 ##
 ## Çalıştırma (proje klasöründe):
 ##   godot --path . res://tools/smoke_test.tscn
@@ -42,10 +42,13 @@ func _ready() -> void:
 	_check(_main.current_map.name == "Wild", "Batı çıkışı vahşi bölgeye götürmeli")
 	_screenshot("02_wild")
 
-	# İlk düşman bölüğünün yanına git ve saldır
+	# İlk düşman bölüğünün (orklar) yanına git ve saldır; orkların özel saldırısı hemen hazır olsun
 	var group := _main.current_map.get_node("Entities/EnemyGroup1") as EnemyGroup
+	for child in group.get_children():
+		child.set("_special_cooldown", 0.0)
 	player.global_position = group.global_position + Vector2(0, 40)
 	var gold_before := GameState.gold
+	var saw_telegraph := false
 	Input.action_press("attack")
 	var waited := 0
 	while _alive_enemies(group) > 0 and waited < 900:
@@ -57,12 +60,16 @@ func _ready() -> void:
 			player.facing = "right" if to_target.x >= 0 else "left"
 			if player.global_position.distance_to(target.global_position) > 18.0:
 				player.global_position = player.global_position.move_toward(target.global_position, 2.0)
+		if not saw_telegraph and _has_ground_effect(AreaTelegraph):
+			saw_telegraph = true
+			_screenshot("03_orc_special")
 		if waited == 60:
 			_screenshot("03_combat")
 		await _frames(1)
 		waited += 1
 	Input.action_release("attack")
 	_check(_alive_enemies(group) == 0, "Bölükteki tüm düşmanlar ölmeli")
+	_check(saw_telegraph, "Ork özel saldırısı uyarı alanı göstermeli")
 	print("Savaş süresi: %d kare, oyuncu canı: %d/%d" % [waited, GameState.hp, GameState.max_hp])
 
 	# Sandığın düşmesini bekle ve üstüne yürü
@@ -81,19 +88,75 @@ func _ready() -> void:
 		_check(GameState.gold > gold_before, "Sandık altın vermeli")
 		_screenshot("05_loot")
 
-	# İksir
+	# Yetenek: iblislerin ortasında yere vur
+	_heal_player()
+	var demons := _main.current_map.get_node("Entities/EnemyGroup3") as EnemyGroup
+	for child in demons.get_children():
+		child.set("_special_cooldown", 99.0)
+	player.global_position = demons.global_position + Vector2(0, 6)
+	await _frames(5)
+	GameState.mana = GameState.max_mana
+	var mana_before := GameState.mana
+	Input.action_press("skill")
+	await _frames(2)
+	Input.action_release("skill")
+	await _frames(20)
+	_screenshot("06_skill")
+	var damaged := 0
+	for child in demons.get_children():
+		var demon := child as Enemy
+		if demon and demon.hp < demon.max_hp:
+			damaged += 1
+	_check(GameState.mana <= mana_before - player.skill_mana_cost + 1.0, "Yetenek mana harcamalı")
+	_check(damaged >= 2, "Yetenek çevredeki tüm iblislere vurmalı (%d vuruldu)" % damaged)
+	await _frames(60)
+
+	# Kan canavarı hücumu
+	_heal_player()
+	var monsters := _main.current_map.get_node("Entities/EnemyGroup2") as EnemyGroup
+	var charger := monsters.get_child(0) as Enemy
+	for child in monsters.get_children():
+		child.set("_special_cooldown", 99.0)
+	charger.set("_special_cooldown", 0.0)
+	player.global_position = charger.global_position + Vector2(90, 0)
+	var saw_charge := false
+	for i in 120:
+		await _frames(1)
+		if charger.state == Enemy.State.SPECIAL and i % 10 == 0 and not saw_charge:
+			_screenshot("07_charge_warning")
+		if charger.state == Enemy.State.CHARGING:
+			saw_charge = true
+	_check(saw_charge, "Kan canavarı hücum etmeli")
+
+	# İksirler
 	GameState.hp = 50
-	var potions_before := GameState.potions
+	GameState.mana = 0.0
+	var health_before := GameState.health_potions
+	var mana_potions_before := GameState.mana_potions
 	Input.action_press("use_potion")
+	Input.action_press("use_mana_potion")
 	await _frames(2)
 	Input.action_release("use_potion")
-	_check(potions_before == 0 or GameState.potions == potions_before - 1, "İksir kullanılmalı")
+	Input.action_release("use_mana_potion")
+	_check(health_before == 0 or GameState.health_potions == health_before - 1, "Can iksiri kullanılmalı")
+	_check(mana_potions_before == 0 or GameState.mana_potions == mana_potions_before - 1, "Mana iksiri kullanılmalı")
 
-	print("Altın: %d, iksir: %d, silah: %s, zırh: %s, çanta: %d eşya" % [
-		GameState.gold, GameState.potions,
-		GameState.weapon.get_display_name() if GameState.weapon else "-",
-		GameState.armor.get_display_name() if GameState.armor else "-",
-		GameState.inventory.size()])
+	# Envanter: aç, oyun dursun, kapat
+	GameState.add_item(ItemData.create_random(1, [ItemData.Type.VALUABLE]))
+	Input.action_press("toggle_inventory")
+	await get_tree().process_frame
+	Input.action_release("toggle_inventory")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(get_tree().paused, "Envanter açılınca oyun durmalı")
+	await _screenshot("08_inventory")
+	var inventory := _main.get_node("HUD").get_node("%InventoryWindow") as InventoryWindow
+	inventory.close()
+	await get_tree().process_frame
+	_check(not get_tree().paused, "Envanter kapanınca oyun devam etmeli")
+
+	print("Altın: %d, can iksiri: %d, mana iksiri: %d, çanta: %d eşya" % [
+		GameState.gold, GameState.health_potions, GameState.mana_potions, GameState.inventory.size()])
 	if _failures.is_empty():
 		print("DUMAN TESTİ BAŞARILI")
 	else:
@@ -110,6 +173,20 @@ func _check(condition: bool, description: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await get_tree().physics_frame
+
+
+func _heal_player() -> void:
+	GameState.hp = GameState.max_hp
+	GameState.hp_changed.emit(GameState.hp, GameState.max_hp)
+
+
+func _has_ground_effect(type: Variant) -> bool:
+	if Map.current == null:
+		return false
+	for effect in Map.current.ground_effects.get_children():
+		if is_instance_of(effect, type):
+			return true
+	return false
 
 
 func _alive_enemies(group: EnemyGroup) -> int:

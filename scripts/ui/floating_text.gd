@@ -3,22 +3,23 @@ extends Label
 ## Hasar sayıları ve kısa bilgiler için yukarı süzülüp kaybolan yazı.
 ## Kullanım: FloatingText.spawn(get_parent(), global_position, "12", Color.WHITE)
 
+const THEME := preload("res://assets/ui/game_theme.tres")
+
 
 static func spawn(parent: Node, world_position: Vector2, text: String, color: Color = Color.WHITE) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
 	var label := FloatingText.new()
+	label.theme = THEME
+	label.theme_type_variation = &"HudLabel"
 	label.text = text
 	label.modulate = color
-	label.add_theme_font_size_override("font_size", 8)
-	label.add_theme_constant_override("outline_size", 2)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.size = Vector2(60, 12)
+	label.size = Vector2(60, 13)
 	label.z_index = 100
 	parent.add_child(label)
-	label.global_position = world_position - label.size / 2.0
+	label.global_position = (world_position - label.size / 2.0).round()
 	label._animate()
 
 

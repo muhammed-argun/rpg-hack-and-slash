@@ -8,8 +8,10 @@ extends SceneTree
 ##
 ## Çalıştırma (proje klasöründe):
 ##   godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd
+## Paketler başka bir klasördeyse:
+##   godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd -- --pack-root="res://Klasör Adı"
 
-const PACK_ROOT := "res://ReadyAssetSets"
+const DEFAULT_PACK_ROOT := "res://ReadyAssetSets"
 const SOURCE_FRAME := 100
 
 # Kaynak klasör (ReadyAssetSets altında), dosya öneki, hedef klasör
@@ -25,12 +27,19 @@ const ANIMATION_MAP := {
 	"Idle": "idle",
 	"Walk": "walk",
 	"Attack01": "attack",
+	"Attack02": "special",
 	"Hurt": "hurt",
 	"Death": "death",
 }
 
 
+var _pack_root := DEFAULT_PACK_ROOT
+
+
 func _init() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--pack-root="):
+			_pack_root = arg.get_slice("=", 1).trim_prefix('"').trim_suffix('"')
 	for entry: Array in CHARACTERS:
 		_import_character(entry[0], entry[1], entry[2])
 	quit()
@@ -40,7 +49,7 @@ func _import_character(source_dir: String, prefix: String, target_dir: String) -
 	# Önce tüm kareleri yükle
 	var frames_by_anim := {}
 	for pack_anim: String in ANIMATION_MAP:
-		var path := ProjectSettings.globalize_path("%s/%s/%s_%s.png" % [PACK_ROOT, source_dir, prefix, pack_anim])
+		var path := ProjectSettings.globalize_path("%s/%s/%s_%s.png" % [_pack_root, source_dir, prefix, pack_anim])
 		var sheet := Image.load_from_file(path)
 		if sheet == null:
 			push_error("Bulunamadı: " + path)

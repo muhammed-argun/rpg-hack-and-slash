@@ -30,20 +30,29 @@ Bu dosya her Claude oturumunun başında otomatik okunur. Kalıcı kurallar ve k
 - `tools/` geliştirme araçları (oyuna dahil değil)
 - `docs/` belgeler; dış kaynaklı asset'ler `docs/credits.md` dosyasına işlenir
 - `ReadyAssetSets/` indirilen ham asset paketleri (`.gdignore` ile Godot'dan gizli)
+- `addons/pixel_bars`, `addons/pixel_ui_fantasy` hazır UI eklentileri (dokunulmaz; değişiklikler `assets/ui/` altındaki kopyalarda yapılır)
+- `assets/ui/game_theme.tres` oyunun genel teması (parşömen teması + Türkçe font + `HudLabel` varyasyonu); `assets/fonts/quill_tr.*` Türkçe harfli font
 
 ## Mimari
 - `Main` haritaları yükler; oyuncu tek bir instance olarak haritalar arasında taşınır
 - Haritalar arası korunan durum (can, altın, iksir, ekipman) `GameState` autoload'unda tutulur
 - Karakter görselleri `CharacterSprite` ile klasörden isimlendirme kuralına göre yüklenir; görsel eklemek kod değişikliği gerektirmez
-- Dokunmatik kontroller ve klavye aynı Input Map aksiyonlarını kullanır: `move_left/right/up/down`, `attack`, `use_potion`
+- Dokunmatik kontroller ve klavye aynı Input Map aksiyonlarını kullanır: `move_left/right/up/down`, `attack`, `skill`, `use_potion`, `use_mana_potion`, `toggle_inventory`
+- Dokunmatik butonlar `ActionButton` (TouchScreenButton tabanlı, çoklu dokunma için); normal `Button` yalnızca ilk parmağı algıladığı için oyun içi kontrollerde kullanılmaz
+- Envanter açıkken `get_tree().paused = true`; HUD `PROCESS_MODE_ALWAYS`
 - Çarpışma katmanları: 1 = world, 2 = player, 3 = enemy
+- Yer efektleri (uyarı alanları, şok dalgaları) `Map.add_ground_effect()` ile zeminle karakterler arasına çizilir
+- Arayüz yazılarında font boyutu değiştirilmez (Quill 10 px bitmap font); oyun ekranı üstündeki yazılar `HudLabel` varyasyonunu kullanır
 - Godot 4.7'de yerleşik `VirtualJoystick` sınıfı var, bu yüzden kendi joystick sınıfımızın adı `TouchJoystick`
 
 ## Araçlar ve Test
 Godot: `E:\GodotSetup\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
 - Duman testi (oyunu otomatik oynar, sonucu yazar): `godot --path . res://tools/smoke_test.tscn`
 - Eksik yer tutucu görselleri üret: `godot --headless --path . --script res://tools/generate_placeholders.gd`
-- Tiny RPG paketini karelere böl: `godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd`
+- Tiny RPG paketini karelere böl: `godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd`  (paket klasörü farklıysa sonuna `-- --pack-root="res://Klasör"`)
+- Türkçe fontu yeniden üret: `godot --headless --path . --script res://tools/make_turkish_font.gd`
+- Duman testini takılmaya karşı süre sınırıyla çalıştır: sonuna `--quit-after 5000` ekle
+- Not: Yeni addon/tema eklendikten sonraki ilk `--import` doku yükleme hataları verebilir; ikinci çalıştırma temiz olmalı
 - Demo haritalarını üret (var olanların üzerine yazmaz): `godot --headless --path . res://tools/build_demo_maps.tscn`
 - Script değişikliğinden sonra hata kontrolü: `godot --headless --path . --import`
 - Not: `--script` modunda autoload'lar yüklenmez. Oyun scriptlerini kullanan araçlar sahne olarak çalıştırılır.

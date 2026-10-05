@@ -47,6 +47,7 @@ Dosya adı kuralı: **`<animasyon>_<yön>_<kare numarası>.png`**
 | `idle` | Dururken | 2 | Evet |
 | `walk` | Yürürken | 4 | Evet |
 | `attack` | Saldırırken | 4 | Hayır |
+| `special` | Yetenek (oyuncu) / özel saldırı (düşman) | yok | Hayır |
 | `hurt` | Hasar alınca | 2 | Hayır |
 | `death` | Ölünce | 4 | Hayır |
 
@@ -68,6 +69,17 @@ assets/characters/warrior/walk_right_04.png
 - **Saldırının vuruş anı:** Hasar, saldırı animasyonunun **3. karesinde** (`attack_*_03`) verilir. Bunu değiştirmek için Godot'da Player ya da Goblin sahnesindeki `Attack Hit Frame` değerini ayarla (0'dan başlar, yani 2 = 3. kare).
 - **Animasyon hızı:** Saniyedeki kare sayısı: idle 4, walk 8, attack 12, hurt 10, death 8. Değiştirmek için sahnedeki `Sprite` node'unun `Fps Overrides` alanına örneğin `{"walk": 10.0}` yaz.
 
+- **`special` animasyonu:** Oyuncuda yeteneğin (Yer Sarsıntısı), düşmanlarda özel saldırının animasyonudur. Vuruş anı sahnedeki `Skill Hit Frame` / `Special Hit Frame` değeriyle ayarlanır. Düşmanlar vuruştan önceki karede `Special Windup` süresi kadar bekler.
+
+## Eşya ikonları
+Klasör: `assets/items/` (Woshi paketi, 32×32): `potion_health`, `potion_mana`, `gold_coin`, `gem`, `crystal`, `gold_ore`, `map`, `key`. Değerli eşyaların hangi ikonu kullandığı `scripts/items/item_data.gd` içindeki `VALUABLES` listesinde.
+
+## Arayüz (UI) paketleri
+- Can/mana barları ve düşman can barları: `addons/pixel_bars` (`PixelBar` node'u)
+- Tema, pencereler, butonlar, kutular, ikonlar: `addons/pixel_ui_fantasy`. Oyun bunun kopyası olan `assets/ui/game_theme.tres` temasını kullanır.
+- Font: `assets/fonts/quill_tr.fnt` (Quill + Türkçe harfler). Yazı boyutunu değiştirme, 10 px'de keskin görünür.
+- Joystick görselleri hâlâ yer tutucu: `assets/ui/joystick_base.png`, `joystick_knob.png`.
+
 ## Sandık
 | Dosya | Açıklama |
 |---|---|
@@ -88,13 +100,6 @@ Dosya: `assets/tiles/tileset.png`. **192×32** boyutunda, yan yana 6 kare (her b
 
 Bu dosyayı **aynı düzenle** çizersen haritalar otomatik olarak senin grafiklerinle görünür. Daha fazla çeşit (çiçekli çimen, köşe parçaları, ev çatısı vb.) istediğinde Godot'da yeni bir tileset kurarız.
 
-## Arayüz
-| Dosya | Boyut | Açıklama |
-|---|---|---|
-| `assets/ui/joystick_base.png` | 48×48 | Joystick'in dış halkası |
-| `assets/ui/joystick_knob.png` | 22×22 | Joystick'in kolu |
-| `assets/ui/button_attack.png` | 40×40 | Saldırı butonu |
-| `assets/ui/button_potion.png` | 28×28 | İksir butonu |
 
 ## Yeni düşman türü eklemek
 1. `scenes/enemies/goblin.tscn` dosyasını kopyala (ör. `skeleton.tscn`).

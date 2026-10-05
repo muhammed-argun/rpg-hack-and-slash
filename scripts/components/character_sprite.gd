@@ -4,15 +4,15 @@ extends AnimatedSprite2D
 ##
 ## Dosya adı kuralı: <animasyon>_<yön>_<kare numarası>.png
 ##   Örnek: walk_right_01.png, walk_right_02.png, attack_right_01.png
-## Animasyonlar: idle, walk, attack, hurt, death
+## Animasyonlar: idle, walk, attack, special (yetenek/özel saldırı), hurt, death
 ## Yönler: right, left (karakterler yandan görünür, aşağı/yukarı yön yoktur)
 ## - Kareler 01'den başlar ve ilk eksik numarada durur; istenen sayıda kare eklenebilir.
 ## - Sol yön (left) çizilmemişse sağ yön (right) aynalanarak kullanılır.
 
-const ANIMATIONS := ["idle", "walk", "attack", "hurt", "death"]
+const ANIMATIONS := ["idle", "walk", "attack", "special", "hurt", "death"]
 const DIRECTIONS := ["right", "left"]
 const LOOPING_ANIMATIONS := ["idle", "walk"]
-const DEFAULT_FPS := {"idle": 4.0, "walk": 8.0, "attack": 12.0, "hurt": 10.0, "death": 8.0}
+const DEFAULT_FPS := {"idle": 4.0, "walk": 8.0, "attack": 12.0, "special": 12.0, "hurt": 10.0, "death": 8.0}
 const MAX_FRAMES := 99
 
 ## Görsellerin bulunduğu klasör (ör. res://assets/characters/warrior)

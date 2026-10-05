@@ -45,11 +45,14 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 | Rogue | Çevik yakın dövüş | Kritik vuruş, yüksek hız |
 
 - **[Açık]** Her sınıfın yetenek sayısı ve listesi
-- **[Açık]** Kaynak sistemi (mana, enerji, öfke vb.)
+- **[Karar]** Warrior (şimdilik Soldier görseli) mana kullanır: 60 mana, saniyede 1 dolar
+- **[Karar]** Warrior yeteneği "Yer Sarsıntısı": kılıcı yere saplar, çevresindeki tüm düşmanlara hasar verir, 20 mana
+- **[Açık]** Diğer sınıfların kaynak sistemi (enerji, öfke vb.)
 
 ## Oyuncu ve Kontroller
-- **[Öneri]** Sol tarafta sanal joystick ile hareket
-- **[Öneri]** Sağ tarafta temel saldırı butonu, 3-4 yetenek butonu ve iksir butonu
+- **[Karar]** Sol tarafta, dokunulan yerde beliren sanal joystick ile hareket
+- **[Karar]** Sağ altta saldırı, yetenek, can iksiri ve mana iksiri butonları; sağ üstte altın ve çanta butonu
+- **[Karar]** Klavye (test için): WASD/oklar, Space/J saldırı, K/2 yetenek, Q/1 can iksiri, E mana iksiri, I/Tab envanter
 
 ## Savaş Sistemi
 - **[Karar]** Düşmanlar gruplar (bölükler) hâlinde bulunur
@@ -60,10 +63,16 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 - **[Karar]** Sandıktan çıkabilecekler: silah, zırh, iksir, altın, satılabilir değerli eşyalar
 - **[Karar]** Şehirlerde eşya alınıp satılabilir
 - **[Öneri]** Nadirlik seviyeleri renklerle gösterilir: Sıradan (beyaz), Büyülü (mavi), Nadir (sarı), Efsanevi (turuncu)
-- **[Açık]** Envanter boyutu, sınıfa özel eşyalar
+- **[Karar]** Envanter: 12 kutuluk çanta (iksirler ve değerli eşyalar üst üste durur), Ekipman sekmesi silah/zırh görselleri gelince açılacak
+- **[Açık]** Sınıfa özel eşyalar
 
 ## Düşmanlar
-_Henüz belirlenmedi._
+| Düşman | Özellik | Özel saldırı |
+|---|---|---|
+| Ork | Orta can, yavaş | Önüne baltayla yer vuruşu (alan) |
+| Kan Canavarı | Az can, hızlı | Uzaktan hücum (çizgi boyunca atılma) |
+| İblis | Yüksek can ve hasar | Etrafına geniş alan vuruşu |
+- **[Karar]** Özel saldırılardan önce yerde kırmızı uyarı alanı belirir; oyuncu kaçabilir
 
 ## Hikâye
 - **[Açık]** Dünyanın ve kahramanın hikâyesi henüz belirlenmedi

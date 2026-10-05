@@ -2,6 +2,17 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-05 — Arayüz, mana, yetenek ve özel saldırılar
+- UI: Pixel Bars (can/mana barları, düşman ince barları) ve Pixel UI Fantasy (parşömen teması, envanter) eklenti olarak `addons/` altına kuruldu. Eşya ikonları Woshi paketinden.
+- Paket fontlarında ı İ ş Ş ğ Ğ yoktu; `tools/make_turkish_font.gd` bunları fontun kendi harflerinden türetiyor.
+- Mana: 60, saniyede 1 dolar (yavaş). Mana iksiri %50 doldurur, E tuşu. Can iksiri Q.
+- Yetenek "Yer Sarsıntısı": Soldier'ın Attack02 animasyonu (`special`), 20 mana, 2 sn bekleme, 44 px yarıçap, 1.6× hasar.
+- Düşman özel saldırıları (Attack02): Ork önüne alan vuruşu, İblis etrafına geniş alan vuruşu, Kan Canavarı hücum. Hepsi önce yerde uyarı alanı gösterir ve vuruştan önceki karede `special_windup` kadar bekler (mobilde kaçabilmek için).
+- Özel saldırı sırasında düşman sendelemez ve geri savrulmaz.
+- Sandıklar şimdilik silah/zırh düşürmüyor (görselleri yok); altın, iki tür iksir ve değerli eşya düşürüyor.
+- Envanter açılınca oyun duraklar.
+- Pixel Bars'taki kalpler ve yeşil (dayanıklılık) bar şimdilik kullanılmadı, karşılık gelen sistem yok.
+
 ## 2026-10-05 — Yalnızca sağ/sol yön
 - Aşağı/yukarı görünüm kaldırıldı. Görsel sadece sağa ya da sola bakar. Yatay girdi varsa (çaprazda bile) karakter hemen o yöne döner. Sadece dikey girdide son yatay yön korunur.
 - Saldırı alanı görselin yönünü değil, son hareket yönünü (`aim_direction`) takip eder. Böylece üstteki ve alttaki düşmanlara da vurulabilir.

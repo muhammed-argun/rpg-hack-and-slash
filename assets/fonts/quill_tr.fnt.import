@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://bdomedicyuugh"
+path="res://.godot/imported/quill_tr.fnt-ef89429eec50187009c3c1a3e1fe585a.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/quill_tr.fnt"
+dest_files=["res://.godot/imported/quill_tr.fnt-ef89429eec50187009c3c1a3e1fe585a.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

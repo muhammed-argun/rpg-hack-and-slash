@@ -22,5 +22,5 @@ position = Vector2(0, -4)
 shape = SubResource("CircleShape2D_body")
 
 [node name="HealthBar" type="Node2D" parent="."]
-position = Vector2(0, -26)
+position = Vector2(0, -32)
 script = ExtResource("3_bar")

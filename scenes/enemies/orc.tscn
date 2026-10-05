@@ -16,6 +16,14 @@ max_hp = 60
 damage = 10
 move_speed = 55.0
 attack_hit_frame = 3
+special = 1
+special_damage = 18
+special_cooldown = 6.0
+special_max_range = 40.0
+special_radius = 30.0
+special_offset = 14.0
+special_windup = 0.6
+special_hit_frame = 3
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 script = ExtResource("2_sprite")
@@ -29,5 +37,5 @@ position = Vector2(0, -4)
 shape = SubResource("CircleShape2D_body")
 
 [node name="HealthBar" type="Node2D" parent="."]
-position = Vector2(0, -26)
+position = Vector2(0, -32)
 script = ExtResource("3_bar")
