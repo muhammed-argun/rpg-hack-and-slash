@@ -40,6 +40,8 @@ const BASE_MAX_MANA := 60
 const BASE_MAX_STAMINA := 100
 const BASE_DAMAGE := 14
 const BASE_DEFENSE := 2
+## Zırh sonrası hasar en az gelen hasarın bu oranı kadardır (en az 1)
+const DAMAGE_FLOOR_RATIO := 0.25
 const CRIT_CHANCE := 0.05
 const CRIT_MULTIPLIER := 1.5
 ## Saniyede dolan mana (yavaş; hızlı doldurmak için mana iksiri)
@@ -54,6 +56,8 @@ const START_MANA_POTIONS := 1
 
 ## Çanta yuva sayısı (6x6). Aynı ad ve nadirlikteki değerli eşyalar, iksirler ve malzemeler tek yuvada yığılır.
 const BAG_SIZE := 36
+## Bir çanta yuvasında yığılabilecek en çok eşya (iksir, malzeme, değerli eşya); ekipman zaten yığılmaz
+const MAX_STACK := 20
 ## Ekipman yuvaları. Silahlar iki set: main_1/off_1 (1. set), main_2/off_2 (2. set). ammo_*: sadak.
 const EQUIP_SLOTS := [
 	"helmet", "amulet", "armor", "cloak", "gloves", "belt", "ring", "boots",
@@ -167,6 +171,10 @@ var flags: Dictionary = {}
 var current_map: String = START_MAP
 var current_spawn: String = START_SPAWN
 var saved_position: Variant = null
+## Dev konsolu: komut çubuğuna "zort" yazılınca açılır (oturum boyunca; kayda yazılmaz)
+var dev_mode: bool = false
+## Dev konsolu: açıksa oyuncu hasar almaz. Kayda yazılmaz.
+var god_mode: bool = false
 
 ## Kayıt dosyası (testler kendi dosyasını kullanır, oyuncunun kaydına dokunmaz)
 var save_path: String = "user://save.json"
@@ -231,9 +239,12 @@ func roll_damage(multiplier: float = 1.0) -> Dictionary:
 	return {"amount": roundi(amount), "crit": crit}
 
 
-## Oyuncuya hasar uygular, savunmadan sonra kalan hasarı döndürür.
-func damage_player(raw_damage: int) -> int:
+## Oyuncuya hasar uygular, savunmadan sonra kalan hasarı döndürür. Zırh gelen hasarın en fazla
+## %75'ini keser (DAMAGE_FLOOR_RATIO); apply_floor=false: blok sızıntısı gibi önceden hesaplanmış hasar.
+func damage_player(raw_damage: int, apply_floor: bool = true) -> int:
 	var dealt := maxi(1, raw_damage - get_defense())
+	if apply_floor:
+		dealt = maxi(dealt, ceili(raw_damage * DAMAGE_FLOOR_RATIO))
 	hp = maxi(0, hp - dealt)
 	hp_changed.emit(hp, max_hp)
 	if hp == 0:
@@ -406,33 +417,39 @@ func bag_used_slots() -> int:
 	return used
 
 
-## Yığını çantaya koyar: önce aynı türden yığınlara ekler, kalanı ilk boş yuvaya.
+## Yığını çantaya koyar: önce aynı türden yığınların boşluğunu doldurur (en çok MAX_STACK),
+## kalanı boş yuvalara MAX_STACK'lik parçalar hâlinde koyar.
 ## Sığmayan adedi döndürür (0 = hepsi sığdı).
 func add_to_bag(stack: BagStack) -> int:
 	var left := stack.count
 	if stack.id != BagStack.EQUIPMENT_ID:
 		for other in bag:
-			if other and other.can_stack_with(stack):
-				other.count += left
-				left = 0
+			if left <= 0:
 				break
-	if left > 0:
+			if other and other.can_stack_with(stack):
+				var moved := mini(left, maxi(0, MAX_STACK - other.count))
+				other.count += moved
+				left -= moved
+	while left > 0:
 		var index := bag.find(null)
-		if index >= 0:
-			bag[index] = stack.copy_with(left)
-			left = 0
+		if index < 0:
+			break
+		var chunk := mini(left, MAX_STACK)
+		bag[index] = stack.copy_with(chunk)
+		left -= chunk
 	if left < stack.count:
 		_bag_changed()
 	return left
 
 
-## Yığının tamamı çantaya sığar mı
+## Yığının tamamı çantaya sığar mı (mevcut yığınların boşluğu + boş yuvalar)
 func bag_has_room_for(stack: BagStack) -> bool:
+	var room := bag.count(null) * MAX_STACK
 	if stack.id != BagStack.EQUIPMENT_ID:
 		for other in bag:
 			if other and other.can_stack_with(stack):
-				return true
-	return bag.has(null)
+				room += maxi(0, MAX_STACK - other.count)
+	return room >= stack.count
 
 
 ## Bu id'den verilen adedi çantadan çıkarır (sondaki yığınlardan başlayarak). Yetmezse hiçbir şey yapmaz.
@@ -469,15 +486,19 @@ func take_from_slot(index: int, amount: int) -> BagStack:
 	return taken
 
 
-## Yığını yuvaya bırakır. Yuva boşsa yerleşir, aynı türse birleşir; farklı bir eşya varsa
-## yer değiştirirler ve oradaki yığın döner (imlece geçer). Hiçbir şey dönmezse null.
+## Yığını yuvaya bırakır. Yuva boşsa yerleşir, aynı türse MAX_STACK'e kadar birleşir (artan kısım
+## döner, imlecte kalır); farklı bir eşya varsa yer değiştirirler ve oradaki yığın döner (imlece geçer).
+## Hiçbir şey dönmezse null.
 func place_in_slot(stack: BagStack, index: int) -> BagStack:
 	var current := bag[index]
 	var displaced: BagStack = null
 	if current == null:
 		bag[index] = stack
 	elif current.can_stack_with(stack):
-		current.count += stack.count
+		var moved := mini(stack.count, maxi(0, MAX_STACK - current.count))
+		current.count += moved
+		if moved < stack.count:
+			displaced = stack.copy_with(stack.count - moved)
 	else:
 		bag[index] = stack
 		displaced = current
@@ -525,6 +546,22 @@ func bag_index_of(item: ItemData) -> int:
 		if bag[i] and bag[i].item == item:
 			return i
 	return -1
+
+
+## Eski kayıtlardan gelen MAX_STACK'ten büyük yığınları böler: artan kısım boş yuvalara gider.
+## Boş yuva yoksa fazlalık yerinde kalır (eşya kaybolmasın).
+func _split_oversized_stacks() -> void:
+	for i in bag.size():
+		var stack := bag[i]
+		if stack == null or stack.id == BagStack.EQUIPMENT_ID:
+			continue
+		while stack.count > MAX_STACK:
+			var index := bag.find(null)
+			if index < 0:
+				return
+			var chunk := mini(stack.count - MAX_STACK, MAX_STACK)
+			bag[index] = stack.copy_with(chunk)
+			stack.count -= chunk
 
 
 func _clear_bag() -> void:
@@ -921,6 +958,7 @@ func load_game() -> bool:
 		for entry: Variant in data.get("inventory", []):
 			if entry is Dictionary:
 				add_to_bag(BagStack.of_item(ItemData.from_dict(entry)))
+	_split_oversized_stacks()
 	shards.clear()
 	for id: Variant in data.get("shards", []):
 		shards.append(str(id))

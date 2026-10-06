@@ -51,6 +51,7 @@ func _ready() -> void:
 
 	await _test_direction(player)
 	await _test_aim(player)
+	await _test_stun_and_charge(player)
 	await _test_dialogue(player)
 	await _test_language()
 	await _test_defense(player)
@@ -60,6 +61,9 @@ func _ready() -> void:
 	await _test_boss(player)
 	await _test_progression(player)
 	await _test_inventory_and_save(player)
+	await _test_damage_floor_and_stagger(player)
+	await _test_talk_hint_times_out()
+	await _test_dev_console(player)
 
 	print("Altın: %d, can iksiri: %d, mana iksiri: %d, parça: %d, çanta: %d eşya" % [
 		GameState.gold, GameState.health_potions, GameState.mana_potions, GameState.shards.size(), GameState.bag_used_slots()])
@@ -232,7 +236,175 @@ func _test_defense(player: Player) -> void:
 	Input.action_release("move_right")
 	_check(player.global_position.x > orc.global_position.x + 6.0, "Dash ile düşmanın içinden geçip arkasına çıkılmalı (%.0f > %.0f)" % [player.global_position.x, orc.global_position.x])
 	_check(player.collision_mask & Player.ENEMY_LAYER != 0 and not player._overlapping_enemy(), "Dash bitince düşmanla iç içe kalmamalı, çarpışma geri gelmeli")
+	# Dash düşmanı itmemeli: düşmanın fiziği açıkken içinden geçilir, düşmanın konumu değişmez
 	orc.set_physics_process(true)
+	orc.detect_radius = 0.0
+	orc.state = Enemy.State.IDLE
+	orc.velocity = Vector2.ZERO
+	player.global_position = orc.global_position + Vector2(-20, 0)
+	await _frames(5)
+	# Önceki testten kalan sendeleme/yaralanma bitsin (yuvarlanma yalnızca serbestken başlar)
+	var guard := 0
+	while player.state != Player.State.NORMAL and guard < 120:
+		await _frames(1)
+		guard += 1
+	_heal()
+	GameState.stamina = GameState.max_stamina
+	var orc_before := orc.global_position
+	Input.action_press("move_right")
+	await _tap_action("dodge", 1)
+	var max_shift := 0.0
+	for i in 30:
+		await _frames(1)
+		max_shift = maxf(max_shift, orc.global_position.distance_to(orc_before))
+	Input.action_release("move_right")
+	_check(max_shift < 1.0, "Dash sırasında düşman itilmemeli (en çok %.2f piksel kaydı)" % max_shift)
+	_check(player.global_position.x > orc_before.x + 6.0, "Dash düşmanı aşıp arkasına geçmeli (%.0f > %.0f)" % [player.global_position.x, orc_before.x])
+	orc.detect_radius = 110.0
+	await _wait(0.5)
+
+
+# Stun: hareket, saldırı ve blok engellenir. Blood Monster'ın hücumu hasar verir ve ~0,6 sn sersemletir;
+# yalnızca zamanında parry (ve yuvarlanma) sersemlemeyi engeller, sıradan blok engellemez.
+func _test_stun_and_charge(player: Player) -> void:
+	_heal()
+	await _wait(0.5)
+	# Stun sırasında hiçbir eylem yapılamaz
+	player.stun(0.8)
+	_check(player.is_stunned() and player.state == Player.State.STAGGER, "Stun oyuncuyu sersemletmeli")
+	var stun_position := player.global_position
+	Input.action_press("move_right")
+	Input.action_press("attack")
+	Input.action_press("block")
+	await _frames(20)
+	_check(player.state == Player.State.STAGGER and player.global_position.distance_to(stun_position) < 0.5, "Sersemlemişken hareket, saldırı ve blok yapılamamalı")
+	Input.action_release("move_right")
+	Input.action_release("attack")
+	Input.action_release("block")
+	await _wait(0.8)
+	_check(not player.is_stunned(), "Stun süresi bitince oyuncu serbest kalmalı")
+	# Sadece basic attack (NORMAL) kilitlemez; hurt animasyonu dash/saldırı ile kesilir
+	for action: String in ["dodge", "attack"]:
+		_heal()
+		GameState.stamina = GameState.max_stamina
+		await _wait(0.4)
+		for i in 5:
+			player.take_damage(1, null, Combat.Kind.NORMAL)
+			await _frames(1)
+		_check(not player.is_stunned(), "Ardışık basic attack vuruşları oyuncuyu sersemletmemeli")
+		Input.action_press(action)
+		await _frames(3)
+		Input.action_release(action)
+		var expected := Player.State.DODGE if action == "dodge" else Player.State.ATTACK
+		_check(player.state == expected, "Hasar animasyonu sırasında '%s' girdisi anında kabul edilmeli (durum %d)" % [action, player.state])
+		await _wait(0.7)
+	# Alan/ağır vuruşlar (HEAVY) sersemletir
+	_heal()
+	await _wait(0.4)
+	player.take_damage(1, null, Combat.Kind.HEAVY)
+	await _frames(1)
+	_check(player.state == Player.State.STAGGER, "Ağır/alan vuruşu oyuncuyu sersemletmeli")
+	await _wait(0.9)
+	# Yuvarlanırken stun alınmaz
+	GameState.stamina = GameState.max_stamina
+	await _tap_action("dodge", 1)
+	player.stun(1.0)
+	_check(player.state == Player.State.DODGE, "Yuvarlanma sırasında stun alınmamalı")
+	await _wait(0.6)
+
+	# Hücum: Blood Monster oyuncuya doğru atılır (diğer düşmanlar karışmasın diye durdurulur)
+	var frozen: Array[Enemy] = []
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var other := node as Enemy
+		if other and other.is_physics_processing():
+			other.set_physics_process(false)
+			frozen.append(other)
+	var monster := (load("res://scenes/enemies/blood_monster.tscn") as PackedScene).instantiate() as Enemy
+	_main.current_map.get_node("Entities").add_child(monster)
+	monster.detect_radius = 0.0
+	# Hücum yolu açık olsun: oyuncunun etrafında duvarsız bir yön seç (canavar o yönde 60 px uzakta)
+	var charge_offset := Vector2(-60, 0)
+	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+		if not player.test_move(player.global_transform, direction * 80.0):
+			charge_offset = direction * 60.0
+			break
+	monster.global_position = player.global_position + charge_offset
+	await _frames(3)
+	_heal()
+	var hp_before := GameState.hp
+	var hp_after_hit := hp_before
+	monster._start_special()
+	var stunned := 0.0
+	var waited := 0.0
+	while waited < 3.0:
+		await _frames(1)
+		var step := get_physics_process_delta_time()
+		waited += step
+		if player.is_stunned():
+			if stunned == 0.0:
+				# İsabet anı: sonradan gelen normal saldırılar hesaba katılmasın
+				hp_after_hit = GameState.hp
+			stunned += step
+		elif stunned > 0.0:
+			break
+	var expected := maxi(1, monster.special_damage - GameState.get_defense())
+	_check(hp_before - hp_after_hit == expected, "Blood Monster hücumu hasar vermeli (%d bekleniyor, %d)" % [expected, hp_before - hp_after_hit])
+	_check(stunned >= 0.55 and stunned <= 0.9, "Hücum oyuncuyu ~0,6 sn sersemletmeli (%.2f sn)" % stunned)
+	# Sıradan blok (parry penceresi dışı): hasarı azaltır ama stun'u ENGELLEMEZ
+	await _wait(0.8)
+	monster.global_position = player.global_position + charge_offset
+	monster.state = Enemy.State.CHASE
+	monster._special_cooldown = 0.0
+	await _frames(3)
+	_heal()
+	hp_before = GameState.hp
+	Input.action_press("block")
+	await _frames(3)
+	monster._start_special()
+	var stunned_while_blocking := false
+	waited = 0.0
+	while waited < 2.5:
+		await _frames(1)
+		waited += get_physics_process_delta_time()
+		if player.state == Player.State.STAGGER:
+			stunned_while_blocking = true
+	Input.action_release("block")
+	_check(stunned_while_blocking and GameState.hp > hp_before - monster.special_damage, "Sıradan blok hücumun hasarını azaltmalı ama stun'u engellememeli")
+	# Parry (tam çarpma anında blok): stun yok, hasar yok, hücumu yapan düşman sersemler
+	await _wait(1.0)
+	monster.global_position = player.global_position + charge_offset
+	monster.state = Enemy.State.CHASE
+	monster._special_cooldown = 0.0
+	monster.hp = monster.max_hp
+	GameState.stamina = GameState.max_stamina
+	await _frames(3)
+	_heal()
+	hp_before = GameState.hp
+	monster._start_special()
+	var stunned_after_parry := false
+	var monster_stunned := false
+	var block_pressed := false
+	waited = 0.0
+	while waited < 2.5:
+		await _frames(1)
+		waited += get_physics_process_delta_time()
+		# Hücum başlayıp yaklaşınca (çarpmaya ~7 kare kala) blok: parry penceresi (0,2 sn) içinde kalır
+		if not block_pressed and monster.state == Enemy.State.CHARGING and monster.global_position.distance_to(player.global_position) < 45.0:
+			Input.action_press("block")
+			block_pressed = true
+		if player.state == Player.State.STAGGER:
+			stunned_after_parry = true
+		if monster.state == Enemy.State.STUNNED:
+			monster_stunned = true
+	Input.action_release("block")
+	_check(block_pressed and not stunned_after_parry and GameState.hp == hp_before, "Hücuma tam zamanında parry: oyuncu sersemlemez ve hasar almaz")
+	_check(monster_stunned, "Hücuma parry yapınca düşman sersemlemeli")
+	var hit_ratio := float(monster.damage) / GameState.BASE_MAX_HP
+	_check(hit_ratio >= 0.08 and hit_ratio <= 0.10, "Blood Monster'ın normal saldırısı başlangıç canının %%8-10'u olmalı (%.1f%%)" % (hit_ratio * 100.0))
+	monster.queue_free()
+	for other in frozen:
+		if is_instance_valid(other):
+			other.set_physics_process(true)
 	await _wait(0.5)
 
 
@@ -390,12 +562,20 @@ func _test_quick_slots(player: Player, hotbar: Hotbar) -> void:
 
 func _test_boss(player: Player) -> void:
 	_heal()
+	await _test_boss_bar_hides_on_death(player)
+	_heal()
 	await _go_to_map(DEN_PATH, "from_wild")
 	_check(Quests._states["q_main_fenris"]["progress"][0] == 1, "Kurt İni'ne girince görev hedefi ilerlemeli")
 	var boss := _main.current_map.get_node("Entities/BossArena/Fenris") as Boss
 	_check(boss != null and not boss.active, "Fenris arenada uyuyor olmalı")
 	if boss == null:
 		return
+	var leap: BossAttack = null
+	for attack in boss.attacks:
+		if attack.type == BossAttack.Type.CHARGE:
+			leap = attack
+	_check(leap != null and is_equal_approx(leap.stun_time, 1.0), "Fenris atılma saldırısı oyuncuyu 1 sn sersemletmeli")
+	_check(is_equal_approx(boss.phase2_threshold, 0.6) and is_equal_approx(boss.phase3_threshold, 0.3), "Fenris 2. faza %60'ta, 3. faza %30'da geçmeli")
 	player.global_position = boss.global_position + Vector2(0, 80)
 	await _frames(5)
 	_check(boss.active, "Arenaya girince Fenris uyanmalı")
@@ -407,9 +587,16 @@ func _test_boss(player: Player) -> void:
 	while boss.hp > boss.max_hp * 0.45:
 		boss.take_damage(30, false, player.global_position)
 		await _frames(2)
-	_check(boss.phase == 2, "Canı yarıya inince Fenris 2. faza geçmeli")
+	_check(boss.phase == 2, "Canı %60'a inince Fenris 2. faza geçmeli")
 	await _wait(2.5)
 	await _screenshot("08_boss_phase2")
+	_heal()
+	while boss.hp > boss.max_hp * 0.25:
+		boss.take_damage(30, false, player.global_position)
+		await _frames(2)
+	_check(boss.phase == 3, "Canı %30'a inince Fenris 3. faza geçmeli")
+	await _wait(2.0)
+	await _screenshot("08b_boss_phase3")
 	_heal()
 	while is_instance_valid(boss) and boss.state != Enemy.State.DEAD:
 		boss.take_damage(40, false, player.global_position)
@@ -433,6 +620,11 @@ func _test_progression(player: Player) -> void:
 	var kadir := _find_npc("kadir")
 	player.global_position = kadir.global_position + Vector2(0, 16)
 	await _frames(3)
+	# Boss dövüşünden kalan sersemleme/yaralanma bitsin (etkileşim yalnızca serbestken çalışır)
+	var free_guard := 0
+	while player.state != Player.State.NORMAL and free_guard < 120:
+		await _frames(1)
+		free_guard += 1
 	await _tap_action("interact")
 	await _finish_dialogue()
 	await _frames(3)
@@ -625,6 +817,7 @@ func _test_equipment() -> void:
 	bag._drop(Vector2.ZERO, {"source": "bag", "index": to}, potion_at)
 	_check(GameState.bag[potion_at].id == "bloodweed" and GameState.bag[to].id == "health_potion", "Sürükle: farklı eşyayla yer değiştirmeli")
 	GameState.remove_from_bag("bloodweed", 10)
+	await _test_stack_limit_and_pad_move(window, bag)
 
 	# Bilgi kutusu: uzun metin pencereyi büyütmemeli, ekrandan taşmamalı
 	var window_size := window.size
@@ -679,6 +872,110 @@ func _test_equipment() -> void:
 	GameState.xp_changed.emit(GameState.xp, GameState.xp_to_next(), GameState.level)
 	await get_tree().process_frame
 	_check(window._xp_text.text == "%d/%d" % [GameState.xp, GameState.xp_to_next()], "XP barının üstüne gelince sayı yazmalı (%s)" % window._xp_text.text)
+
+
+# Yığın sınırı (20) ve gamepad ile taşı / böl. Çantayı geçici olarak boşaltır, bitince geri koyar.
+func _test_stack_limit_and_pad_move(window: InventoryWindow, bag: BagPanel) -> void:
+	var saved_bag := GameState.bag.duplicate()
+	GameState._clear_bag()
+	_check(GameState.MAX_STACK == 20, "Yığın sınırı 20 olmalı")
+	# Ekleme: 45 malzeme 20 + 20 + 5 olarak yığınlanır
+	_check(GameState.add_to_bag(BagStack.of_id("bloodweed", 45)) == 0, "45 malzeme çantaya sığmalı")
+	_check(GameState.bag[0].count == 20 and GameState.bag[1].count == 20 and GameState.bag[2].count == 5, "45 malzeme 20+20+5 yığınlanmalı")
+	_check(GameState.add_to_bag(BagStack.of_id("bloodweed", 10)) == 0 and GameState.bag[2].count == 15 and GameState.bag_used_slots() == 3, "Yeni eklenen mevcut yığının boşluğunu doldurmalı")
+	_check(GameState.add_to_bag(BagStack.of_id("bloodweed", 10)) == 0 and GameState.bag[2].count == 20 and GameState.bag[3].count == 5, "Taşan kısım yeni yuvaya gitmeli")
+	# Çanta dolu: taşan kısım geri döner, dükkân alımı reddedilir
+	for i in GameState.BAG_SIZE:
+		if GameState.bag[i] == null:
+			GameState.bag[i] = BagStack.of_id("iron_ore", 20)
+	GameState.bag[5] = BagStack.of_id("health_potion", 19)
+	GameState._bag_changed()
+	_check(GameState.bag_has_room_for(BagStack.of_id("health_potion", 1)) and not GameState.bag_has_room_for(BagStack.of_id("health_potion", 2)), "Dolu çantada yalnızca yığının boşluğu kadar yer olmalı")
+	_check(GameState.add_to_bag(BagStack.of_id("health_potion", 4)) == 3 and GameState.bag[5].count == 20, "Sığmayan 3 iksir geri dönmeli")
+	var gold_before := GameState.gold
+	GameState.gold = 1000
+	_check(not GameState.buy_health_potion() and GameState.gold == 1000, "Yığın dolu ve boş yuva yokken dükkândan iksir alınamamalı")
+	GameState.gold = gold_before
+	# Yer değiştirme/birleştirme: sınırı aşan kısım imlecte kalır
+	GameState._clear_bag()
+	GameState.bag[0] = BagStack.of_id("bloodweed", 15)
+	GameState.bag[1] = BagStack.of_id("bloodweed", 12)
+	GameState.move_slot(1, 0)
+	_check(GameState.bag[0].count == 20 and GameState.bag[1] != null and GameState.bag[1].count == 7, "Sürükle: birleşince 20'yi aşan 7 tane eski yuvada kalmalı")
+	var rest := GameState.place_in_slot(BagStack.of_id("bloodweed", 5), 0)
+	_check(rest != null and rest.count == 5 and GameState.bag[0].count == 20, "Dolu yığına bırakılan eşya sığmayınca elde kalmalı")
+	# Eski kayıttaki 20'den büyük yığın bölünür
+	GameState._clear_bag()
+	GameState.bag[0] = BagStack.of_id("health_potion", 50)
+	GameState._split_oversized_stacks()
+	_check(GameState.bag[0].count == 20 and GameState.count_in_bag("health_potion") == 50 and GameState.bag_used_slots() == 3, "Eski kayıttaki 50'lik yığın 20+20+10 olarak bölünmeli")
+
+	# Gamepad ile taşı / böl (çanta düzeni: 0 = 12 Kanotu, 1 = 7 cevher, 2 boş)
+	GameState._clear_bag()
+	GameState.bag[0] = BagStack.of_id("bloodweed", 12)
+	GameState.bag[1] = BagStack.of_id("iron_ore", 7)
+	GameState._bag_changed()
+	Controls._set_using_gamepad(true)
+	_check(Controls.REBINDABLE.has("menu_move") and Controls.REBINDABLE.has("menu_split") and InputMap.has_action("menu_move") and InputMap.has_action("menu_split"), "Taşı ve Böl menü aksiyonları tanımlı ve atanabilir olmalı")
+	bag.get_slot(0).grab_focus()
+	await get_tree().process_frame
+	var hint := bag._hint_label.text
+	_check(hint.contains("X") and hint.contains("Y") and not hint.contains("{"), "Gamepad ipucu X (taşı) ve Y (böl) tuşlarını göstermeli (yazı: %s)" % hint)
+	await _screenshot("10e_pad_hint")
+	await _pad_press(JOY_BUTTON_X)
+	_check(bag.is_holding() and bag._held.count == 12 and GameState.bag[0] == null, "Taşı tuşu odaklı yuvadaki yığını eline almalı")
+	_check(bag._hint_label.text.contains("X") and bag._held_view.visible, "Elde eşya varken ipucu 'bırak' demeli ve eşya odaktaki yuvada görünmeli")
+	bag.get_slot(1).grab_focus()
+	await get_tree().process_frame
+	await _pad_press(JOY_BUTTON_X)
+	_check(bag.is_holding() and bag._held.id == "iron_ore" and GameState.bag[1].id == "bloodweed", "Taşı tuşu dolu yuvaya bırakınca yer değiştirmeli")
+	bag.get_slot(0).grab_focus()
+	await get_tree().process_frame
+	await _pad_press(JOY_BUTTON_X)
+	_check(not bag.is_holding() and GameState.bag[0].id == "iron_ore" and GameState.bag[0].count == 7, "Taşı tuşu boş yuvaya bırakınca eşya yerleşmeli")
+	# Geri tuşu (B): elde tutulan eşya iptal edilir, pencere kapanmaz
+	await _pad_press(JOY_BUTTON_X)
+	_check(bag.is_holding(), "Taşı tuşu eşyayı almalı (iptal denemesi için)")
+	window.go_back()
+	_check(not bag.is_holding() and GameState.bag[0] != null and GameState.bag[0].count == 7 and window.visible, "Geri tuşu elde tutulan eşyayı yerine koymalı, pencereyi kapatmamalı")
+	# Split: Y ile aç, miktar seç, A ile onayla, X ile bırak
+	bag.get_slot(1).grab_focus()
+	await get_tree().process_frame
+	await _pad_press(JOY_BUTTON_Y)
+	_check(bag.is_split_open() and int(bag._split_slider.max_value) == 12, "Böl tuşu odaklı yuva için Split penceresini açmalı")
+	bag._split_slider.value = 5
+	await _pad_press(JOY_BUTTON_A)
+	_check(not bag.is_split_open() and bag.is_holding() and bag._held.count == 5 and GameState.bag[1].count == 7, "A Split miktarını onaylamalı, 5 tane ele alınmalı")
+	bag.get_slot(2).grab_focus()
+	await get_tree().process_frame
+	await _pad_press(JOY_BUTTON_X)
+	_check(not bag.is_holding() and GameState.bag[2].count == 5 and GameState.bag[1].count == 7, "Split edilen miktar boş yuvaya bırakılabilmeli")
+	# Split açıkken B iptal eder
+	bag.get_slot(1).grab_focus()
+	await get_tree().process_frame
+	await _pad_press(JOY_BUTTON_Y)
+	window.go_back()
+	_check(not bag.is_split_open() and window.visible and GameState.bag[1].count == 7, "Geri tuşu Split penceresini iptal etmeli, pencere açık kalmalı")
+	Controls._set_using_gamepad(false)
+	GameState.bag.assign(saved_bag)
+	GameState._bag_changed()
+	bag.select(-1)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+# Gamepad tuşuna gerçek bir girdi olayı gönderir (BagPanel._input aksiyonları olaydan okur)
+func _pad_press(button: JoyButton) -> void:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	event.pressed = true
+	Input.parse_input_event(event)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var release := event.duplicate() as InputEventJoypadButton
+	release.pressed = false
+	Input.parse_input_event(release)
+	await get_tree().process_frame
 
 
 func _make_item(type: ItemData.Type, name_key: String, damage: int, defense: int, two_handed: bool) -> ItemData:
@@ -755,6 +1052,275 @@ func _test_controls() -> void:
 	_check(not controls.visible and settings.visible, "Esc Kontroller'den Ayarlar'a dönmeli")
 	await _press_key(KEY_ESCAPE)
 	_check(not settings.visible and _hud.pause_menu.visible and _hud.pause_menu._panel.visible, "Esc Ayarlar'dan duraklatma menüsüne dönmeli")
+
+
+# Hasar tabanı (zırh sonrası en az gelen hasarın %25'i) ve sersemletme kuralı: normal vuruş sersemletmez,
+# Yer Sarsıntısı normal düşmanı sersemletir, boss ve stagger_resistant düşman yetenekle sersemlemez, parry boss'u sersemletir
+func _test_damage_floor_and_stagger(player: Player) -> void:
+	_heal()
+	var old_armor: Variant = GameState.equipment.get("armor")
+	GameState.equipment["armor"] = _make_item(ItemData.Type.ARMOR, "ITEM_PLATE_ARMOR", 0, 50, false)
+	_check(GameState.damage_player(20) == 5, "Hasar tabanı: 20 hasar çok zırhla bile en az 5 olmalı (%25)")
+	_heal()
+	_check(GameState.damage_player(3) == 1, "Hasar tabanı: en az 1 hasar")
+	_heal()
+	_check(GameState.damage_player(20, false) == 1, "Taban kapalıyken (blok sızıntısı) yalnızca zırh düşer")
+	if old_armor:
+		GameState.equipment["armor"] = old_armor
+	else:
+		GameState.equipment.erase("armor")
+	_heal()
+	GameState.hp = GameState.max_hp
+	_check(GameState.damage_player(40) == 38, "Zayıf zırhta hasar normal hesaplanmalı (40 - 2 savunma)")
+	_heal()
+	# Sersemletme: yalnızca Yer Sarsıntısı
+	var orc := (load("res://scenes/enemies/orc.tscn") as PackedScene).instantiate() as Enemy
+	_main.current_map.get_node("Entities").add_child(orc)
+	orc.global_position = player.global_position + Vector2(20, 0)
+	orc.max_hp = 5000
+	orc.hp = 5000
+	orc.detect_radius = 0.0
+	orc.set_physics_process(false)
+	# Stagger parametresi vermeyen vuruş düşmanı hiç kesintiye uğratmaz: durum, animasyon, hazırlık değişmez
+	var interrupted := false
+	for i in 12:
+		for s in [Enemy.State.CHASE, Enemy.State.ATTACK, Enemy.State.SPECIAL, Enemy.State.CHARGING]:
+			orc.state = s
+			orc._windup_held = true
+			orc._hit_done = false
+			orc.take_damage(14, false, player.global_position, Player.NORMAL_HIT_KNOCKBACK_SCALE, false)
+			if orc.state != s or not orc._windup_held or orc._hit_done:
+				interrupted = true
+	orc.state = Enemy.State.CHASE
+	orc._windup_held = false
+	_check(not interrupted, "Normal vuruş (stagger yok) düşmanın durumunu/hazırlığını hiç değiştirmemeli (48 deneme)")
+	orc.stagger_resistant = true
+	orc.take_damage(14, false, player.global_position, 1.0, true)
+	_check(orc.state != Enemy.State.STUNNED, "stagger_resistant düşman Yer Sarsıntısı'ndan sersemlememeli")
+	orc.stagger_resistant = false
+	player.global_position = orc.global_position + Vector2(-10, 0)
+	player._deal_skill_damage()
+	_check(orc.state == Enemy.State.STUNNED, "Yer Sarsıntısı normal düşmanı sersemletmeli")
+	orc.on_parried()
+	_check(orc.state == Enemy.State.STUNNED, "Parry düşmanı yine sersemletmeli")
+	orc.queue_free()
+	await _test_normal_hit_single_stagger(player)
+	# Boss: yetenekle sersemlemez, parry sersemletir
+	var boss := (load("res://scenes/bosses/fenris.tscn") as PackedScene).instantiate() as Boss
+	_main.current_map.get_node("Entities").add_child(boss)
+	boss.global_position = player.global_position + Vector2(60, 0)
+	boss.set_physics_process(false)
+	boss.activate()
+	boss.take_damage(5, false, player.global_position, 1.0, true)
+	_check(boss.state != Enemy.State.STUNNED and not boss.can_be_staggered(), "Boss Yer Sarsıntısı'ndan sersemlememeli")
+	boss.on_parried()
+	_check(boss.state == Enemy.State.STUNNED, "Parry boss'u sersemletmeli")
+	GameState.boss_ended.emit(boss)
+	boss.queue_free()
+	await _wait(0.3)
+	_heal()
+
+
+# Normal vuruş yalnızca vuruş alanındaki sersemletilebilir mob'ların en yakınını sersemletir; muaf mob sayılmaz;
+# Yer Sarsıntısı hepsini sersemletir; boss etkilenmez ve normal vuruşta hiç kesintiye uğramaz (yinelenen denemelerle)
+func _test_normal_hit_single_stagger(player: Player) -> void:
+	_heal()
+	var orcs: Array[Enemy] = []
+	var offsets := [Vector2(8, -6), Vector2(18, 0), Vector2(24, -8)]
+	var scene := load("res://scenes/enemies/orc.tscn") as PackedScene
+	for off in offsets:
+		var o := scene.instantiate() as Enemy
+		_main.current_map.get_node("Entities").add_child(o)
+		o.global_position = player.global_position + off
+		o.max_hp = 5000
+		o.hp = 5000
+		o.detect_radius = 0.0
+		o.set_physics_process(false)
+		orcs.append(o)
+	player.attack_area.position = Vector2(16, -8)
+	await _frames(3)
+	player._deal_attack_damage()
+	_check(orcs[0].state == Enemy.State.STUNNED and orcs[1].state != Enemy.State.STUNNED and orcs[2].state != Enemy.State.STUNNED, "3 mob vuruş alanındayken normal vuruş yalnızca en yakınını sersemletmeli")
+	_check(orcs[1].hp < 5000 and orcs[2].hp < 5000, "Sersemletilmeyen mob'lar normal vuruşta yine hasar almalı")
+	# Muaf mob "en yakın" seçiminde sayılmaz: bir sonraki en yakın sersemler
+	orcs[0]._end_stun()
+	orcs[0].state = Enemy.State.CHASE
+	orcs[0].normal_hit_stagger_immune = true
+	player._deal_attack_damage()
+	_check(orcs[0].state != Enemy.State.STUNNED and orcs[1].state == Enemy.State.STUNNED and orcs[2].state != Enemy.State.STUNNED, "normal_hit_stagger_immune mob sayılmamalı, sıradaki en yakın sersemlemeli")
+	# Yer Sarsıntısı muaf olanı da dahil hepsini sersemletir
+	for o in orcs:
+		o._end_stun()
+		o.state = Enemy.State.CHASE
+	player.global_position = orcs[1].global_position + Vector2(-10, 0)
+	player._deal_skill_damage()
+	var all_stunned := true
+	for o in orcs:
+		if o.state != Enemy.State.STUNNED:
+			all_stunned = false
+	_check(all_stunned, "Yer Sarsıntısı alandaki bütün mob'ları (normal vuruştan muaf olan dahil) sersemletmeli")
+	# Boss: normal vuruşta hiç kesintiye uğramaz, aday olarak da seçilmez
+	for o in orcs:
+		o.queue_free()
+	await _frames(2)
+	var boss := (load("res://scenes/bosses/fenris.tscn") as PackedScene).instantiate() as Boss
+	_main.current_map.get_node("Entities").add_child(boss)
+	boss.global_position = player.global_position + Vector2(18, 0)
+	boss.set_physics_process(false)
+	boss.max_hp = 100000
+	boss.hp = 100000
+	boss.activate()
+	await _frames(3)
+	var boss_interrupted := false
+	for i in 12:
+		for s in [Enemy.State.CHASE, Enemy.State.ATTACK, Enemy.State.SPECIAL, Enemy.State.CHARGING]:
+			boss.state = s
+			boss._hit_done = false
+			player._deal_attack_damage()
+			if boss.state != s or boss._hit_done:
+				boss_interrupted = true
+	_check(not boss_interrupted, "Boss normal vuruşta hiç kesintiye uğramamalı (48 deneme)")
+	_check(boss.hp < boss.max_hp, "Boss normal vuruştan hasar almalı")
+	GameState.boss_ended.emit(boss)
+	boss.queue_free()
+	await _wait(0.3)
+	_heal()
+
+
+# Öğretici "talk" ipucu 3 sn sonra kendiliğinden kaybolur ve bir daha çıkmaz
+func _test_talk_hint_times_out() -> void:
+	var hints := TutorialHints.new()
+	_hud.get_node("Root").add_child(hints)
+	var had_flag := GameState.has_flag("tutorial_talk")
+	GameState.flags.erase("tutorial_talk")
+	hints._show("talk", "HINT_TALK")
+	await _wait(1.0)
+	_check(hints.visible and hints._current == "talk" and hints._label.text.contains("F"), "Etkileşim ipucu başta görünmeli ve F tuşunu göstermeli (yazı: %s)" % hints._label.text)
+	await _wait(3.0)
+	_check(hints._current.is_empty() and GameState.has_flag("tutorial_talk"), "Etkileşim ipucu ~3 sn sonra kaybolmalı ve tekrar gösterilmemek üzere kaydedilmeli")
+	hints.queue_free()
+	if had_flag:
+		GameState.set_flag("tutorial_talk")
+
+
+# Oyuncu ölünce boss barı kalkar; boss'a yeniden yaklaşılınca (yeni dövüş) bar tekrar çıkar
+func _test_boss_bar_hides_on_death(player: Player) -> void:
+	_heal()
+	await _go_to_map(DEN_PATH, "from_wild")
+	var boss := _main.current_map.get_node_or_null("Entities/BossArena/Fenris") as Boss
+	if boss == null:
+		_check(GameState.has_flag("boss_fenris"), "Boss barı testi: Fenris (yenilmediyse) arenada olmalı")
+		return
+	player.global_position = boss.global_position + Vector2(0, 80)
+	await _frames(5)
+	_check(boss.active and _hud.boss_bar.visible, "Boss barı testi: dövüş başlayınca bar görünmeli")
+	GameState.damage_player(GameState.hp + 1000, false)
+	await _frames(3)
+	_check(not _hud.boss_bar.visible and _hud._boss == null, "Oyuncu ölünce boss barı kapanmalı")
+	await _wait(3.0)
+	_check(not _hud.boss_bar.visible, "Oyuncu yeniden doğarken boss barı kapalı kalmalı")
+	# Yeniden doğma şehre taşır; Kurt İni'ne dönünce boss dolu canla başlar ve bar tekrar çıkar
+	await _go_to_map(DEN_PATH, "from_wild")
+	var boss2 := _main.current_map.get_node_or_null("Entities/BossArena/Fenris") as Boss
+	_check(boss2 != null and boss2.hp == boss2.max_hp and not boss2.active, "Yeniden girince Fenris dolu canla uyuyor olmalı")
+	if boss2:
+		player.global_position = boss2.global_position + Vector2(0, 80)
+		await _frames(5)
+		_check(boss2.active and _hud.boss_bar.visible, "Boss'a yeniden yaklaşınca boss barı tekrar görünmeli")
+	_heal()
+
+
+# Geliştirici konsolu: Enter çubuğu, "zort" ile açılma, F9 konsol, god mode, eşya ekleme, düşman çağırma, ışınlanma
+func _test_dev_console(player: Player) -> void:
+	_heal()
+	await _wait(0.3)
+	var prompt: DevPrompt = _hud._dev_prompt
+	var console: DevConsole = _hud._dev_console
+	_check(not GameState.dev_mode and not prompt.visible and not console.visible, "Dev modu başta kapalı olmalı")
+	# F9 dev modu kapalıyken hiçbir şey yapmaz
+	await _press_key(DevConsole.TOGGLE_KEY)
+	_check(not console.visible and not get_tree().paused, "Dev modu kapalıyken konsol tuşu bir şey yapmamalı")
+	# Enter komut çubuğunu açar ve oyunu duraklatır
+	await _press_key(KEY_ENTER)
+	_check(prompt.visible and get_tree().paused, "Enter komut çubuğunu açmalı (oyun duraklar)")
+	await _screenshot("12a_dev_prompt")
+	# Yanlış kelime: çubuk kapanır, dev modu açılmaz
+	prompt._edit.text = "abc"
+	await _press_key(KEY_ENTER)
+	_check(not prompt.visible and not get_tree().paused and not GameState.dev_mode, "Yanlış kelime yalnızca çubuğu kapatmalı")
+	# Esc çubuğu kapatır
+	await _press_key(KEY_ENTER)
+	_check(prompt.visible, "Enter çubuğu tekrar açmalı")
+	await _press_key(KEY_ESCAPE)
+	_check(not prompt.visible and not get_tree().paused and not _hud.pause_menu.visible, "Esc çubuğu kapatmalı (duraklatma menüsü açılmamalı)")
+	# Bir pencere açıkken Enter çubuğu açmaz
+	_hud._on_window_opened()
+	_hud._quests.open()
+	await _press_key(KEY_ENTER)
+	_check(not prompt.visible, "Pencere açıkken Enter komut çubuğunu açmamalı")
+	_hud._quests.close()
+	await get_tree().process_frame
+	# "ZORT" (büyük harf fark etmez) dev modunu açar
+	await _press_key(KEY_ENTER)
+	prompt._edit.text = "ZORT"
+	await _press_key(KEY_ENTER)
+	_check(GameState.dev_mode and not prompt.visible and not get_tree().paused, "'zort' yazılınca dev modu açılmalı ve çubuk kapanmalı")
+	_check(not Controls.REBINDABLE.has("dev_console") and not InputMap.has_action("dev_console"), "Dev konsolu tuşu ayarlarda görünmemeli")
+	# F9 konsolu açar
+	await _press_key(DevConsole.TOGGLE_KEY)
+	_check(console.visible and get_tree().paused, "Dev modunda konsol tuşu konsolu açmalı")
+	await _screenshot("12b_dev_console")
+	# God mode: hasar yok
+	console._god_check.button_pressed = true
+	_check(GameState.god_mode, "God mode açılmalı")
+	var hp_before := GameState.hp
+	var result := player.take_damage(30, null, Combat.Kind.UNBLOCKABLE)
+	_check(result == Combat.Result.DODGED and GameState.hp == hp_before and not player.is_stunned(), "God mode'da oyuncu hasar almamalı")
+	console._god_check.button_pressed = false
+	_check(not GameState.god_mode, "God mode kapanmalı")
+	# Eşya ekleme
+	var potions := GameState.health_potions
+	var used := GameState.bag_used_slots()
+	var entries := console._item_entries
+	var potion_entry: Dictionary = entries.filter(func(e: Dictionary) -> bool: return e["kind"] == "health_potion")[0]
+	var gear_entry: Dictionary = entries.filter(func(e: Dictionary) -> bool: return e.get("name_key", "") == "ITEM_SWORD")[0]
+	_check(console.add_to_bag(potion_entry, 3) == 3 and GameState.health_potions == potions + 3, "Dev konsolu çantaya iksir eklemeli")
+	used = GameState.bag_used_slots()
+	_check(console.add_to_bag(gear_entry, 2, ItemData.Rarity.RARE) == 2 and GameState.bag_used_slots() == used + 2, "Dev konsolu çantaya ekipman eklemeli (her biri ayrı yuva)")
+	var found_rare := false
+	for stack in GameState.bag:
+		if stack and stack.item and stack.item.name_key == "ITEM_SWORD" and stack.item.rarity == ItemData.Rarity.RARE and stack.item.damage_bonus > 0:
+			found_rare = true
+	_check(found_rare, "Eklenen kılıç seçilen nadirlikte ve güçlü olmalı")
+	# Düşman çağırma
+	var before := get_tree().get_nodes_in_group("enemies").size()
+	var spawned := console.spawn_enemies("res://scenes/enemies/blood_monster.tscn", 3)
+	_check(spawned == 3 and get_tree().get_nodes_in_group("enemies").size() == before + 3, "Dev konsolu istenen sayıda düşman çağırmalı")
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if node is Enemy and (node as Enemy).enemy_id == "blood_monster" and (node as Enemy).global_position.distance_to(player.global_position) < 80.0:
+			node.queue_free()
+	# Işınlanma: şehir
+	var target_index := -1
+	for i in console._teleport_targets.size():
+		if console._teleport_targets[i][0].ends_with("town.tscn") and console._teleport_targets[i][1] == "from_wild":
+			target_index = i
+	_check(target_index >= 0, "Işınlanma listesinde şehir giriş noktaları olmalı")
+	_main.change_map(WILD_PATH, "from_town")
+	await _frames(10)
+	console._teleport_list.select(target_index)
+	console._teleport()
+	await _frames(10)
+	_check(_main.current_map.name == "Town" and not console.visible and not get_tree().paused, "Dev konsolundan ışınlanınca harita değişmeli ve oyun devam etmeli")
+	# F9 ve Esc ile kapanır
+	await _press_key(DevConsole.TOGGLE_KEY)
+	_check(console.visible, "Konsol tekrar açılmalı")
+	await _press_key(DevConsole.TOGGLE_KEY)
+	_check(not console.visible and not get_tree().paused, "Konsol tuşu konsolu kapatmalı")
+	await _press_key(DevConsole.TOGGLE_KEY)
+	await _press_key(KEY_ESCAPE)
+	_check(not console.visible and not get_tree().paused and not _hud.pause_menu.visible, "Esc konsolu kapatmalı")
+	GameState.dev_mode = false
+	_heal()
 
 
 # Gerçek bir klavye basışı gönderir (önce bas, sonra bırak)

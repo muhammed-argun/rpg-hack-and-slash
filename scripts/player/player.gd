@@ -21,6 +21,8 @@ const ENEMY_LAYER := 4
 const DASH_EXIT_TIME := 0.25
 ## Nişanın ölçüldüğü nokta: karakterin gövdesi (ayak değil)
 const AIM_ORIGIN_OFFSET := Vector2(0, -8)
+## Normal vuruşun geri savurması (Yer Sarsıntısı 1,8): düşmanı kesintiye uğratmayacak kadar hafif
+const NORMAL_HIT_KNOCKBACK_SCALE := 0.35
 const SHIELD_ICON := preload("res://addons/pixel_ui_fantasy/icons/shield.png")
 
 @export var move_speed: float = 120.0
@@ -28,8 +30,6 @@ const SHIELD_ICON := preload("res://addons/pixel_ui_fantasy/icons/shield.png")
 @export var attack_hit_frame: int = 2
 ## Saldırı alanının karakterin merkezinden uzaklığı (piksel)
 @export var attack_reach: float = 16.0
-## Her vuruşun düşmanın dengesine (poise) verdiği hasar katı
-@export var poise_damage_multiplier: float = 1.0
 
 @export_group("Yetenek: Yer Sarsıntısı")
 ## Kılıcı yere saplayıp çevresindeki tüm düşmanlara hasar verir
@@ -139,6 +139,8 @@ func _physics_process(delta: float) -> void:
 			_process_block()
 		State.DODGE:
 			_process_dodge(delta)
+		State.HURT:
+			_process_hurt()
 		State.STAGGER:
 			velocity = Vector2.ZERO
 			_state_timer -= delta
@@ -159,6 +161,21 @@ func _read_input() -> Vector2:
 	elif input.x < -TURN_THRESHOLD:
 		facing = "left"
 	return input
+
+
+## Hasar animasyonu sırasında herhangi bir girdi animasyonu keser ve normal akışa devreder
+func _process_hurt() -> void:
+	var wants_action := Input.is_action_just_pressed("dodge") or Input.is_action_pressed("block") \
+			or Input.is_action_pressed("attack") or Input.is_action_just_pressed("interact") \
+			or Input.get_vector("move_left", "move_right", "move_up", "move_down") != Vector2.ZERO
+	for i in GameState.SKILL_SLOT_COUNT:
+		if Input.is_action_just_pressed("skill_%d" % (i + 1)):
+			wants_action = true
+	if wants_action:
+		_set_state(State.NORMAL)
+		_process_normal()
+	else:
+		velocity = Vector2.ZERO
 
 
 func _process_normal() -> void:
@@ -238,10 +255,21 @@ func _start_attack() -> void:
 
 func _deal_attack_damage() -> void:
 	_hit_done = true
+	# Normal vuruş yalnızca sersemletilebilir mob'ların en yakınını (oyuncuya göre) sersemletir; diğerleri sadece hasar alır
+	var staggered: Enemy = null
+	var best := INF
+	for body in attack_area.get_overlapping_bodies():
+		var candidate := body as Enemy
+		if candidate == null or candidate.state == Enemy.State.DEAD or not candidate.can_be_normal_hit_staggered():
+			continue
+		var distance := global_position.distance_squared_to(candidate.global_position)
+		if distance < best:
+			best = distance
+			staggered = candidate
 	for body in attack_area.get_overlapping_bodies():
 		if body is Enemy:
 			var hit: Dictionary = GameState.roll_damage()
-			(body as Enemy).take_damage(hit["amount"], hit["crit"], global_position, 1.0, poise_damage_multiplier)
+			(body as Enemy).take_damage(hit["amount"], hit["crit"], global_position, NORMAL_HIT_KNOCKBACK_SCALE, body == staggered)
 			Audio.play_sfx("crit" if hit["crit"] else "hit")
 
 
@@ -309,7 +337,8 @@ func _deal_skill_damage() -> void:
 		var e := enemy as Enemy
 		if e and e.state != Enemy.State.DEAD and e.global_position.distance_to(center) <= skill_radius:
 			var hit: Dictionary = GameState.roll_damage(skill_damage_multiplier)
-			e.take_damage(hit["amount"], hit["crit"], center, 1.8, 2.0)
+			# Yer Sarsıntısı normal düşmanları sersemletir (boss ve stagger_resistant düşmanlar hariç)
+			e.take_damage(hit["amount"], hit["crit"], center, 1.8, true)
 
 
 # --- Savunma: blok, parry, yuvarlanma ----------------------------------------
@@ -345,6 +374,7 @@ func _try_start_dodge() -> bool:
 	_set_state(State.DODGE)
 	# Dash/yuvarlanma sırasında düşmanların (boss'lar dahil) içinden geçilir; duvarlardan geçilmez
 	collision_mask &= ~ENEMY_LAYER
+	_ignore_enemies(true)
 	_dash_exit_time = 0.0
 	_state_timer = dodge_time
 	_invulnerable_time = dodge_invulnerable_time
@@ -371,6 +401,22 @@ func _process_dodge(delta: float) -> void:
 		_set_state(State.NORMAL)
 
 
+# Dash boyunca düşmanlarla çift yönlü çarpışmayı kapatır/açar. Oyuncunun maskesinden düşman katmanını
+# çıkarmak tek başına yetmez: düşmanın maskesi oyuncu katmanını içerdiği için düşman oyuncuyu iter
+# (iç içe kalınca çarpışma çözümü düşmanı dışarı sürükler). Duvarlar, NPC'ler ve nesneler etkilenmez.
+func _ignore_enemies(ignore: bool) -> void:
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var body := node as PhysicsBody2D
+		if body == null:
+			continue
+		if ignore:
+			add_collision_exception_with(body)
+			body.add_collision_exception_with(self)
+		else:
+			remove_collision_exception_with(body)
+			body.remove_collision_exception_with(self)
+
+
 # Oyuncunun gövdesi şu an bir düşmanın gövdesiyle iç içe mi
 func _overlapping_enemy() -> bool:
 	var query := PhysicsShapeQueryParameters2D.new()
@@ -382,7 +428,7 @@ func _overlapping_enemy() -> bool:
 
 
 func is_invulnerable() -> bool:
-	return _invulnerable_time > 0.0 or state == State.DEAD
+	return _invulnerable_time > 0.0 or state == State.DEAD or GameState.god_mode
 
 
 ## Düşman saldırısı. source: saldıran (parry'lenince sersemletmek için), kind: Combat.Kind
@@ -401,7 +447,7 @@ func take_damage(amount: int, source: Node2D = null, kind: Combat.Kind = Combat.
 		if GameState.spend_stamina(cost, true):
 			var chip := roundi(amount * block_damage_ratio)
 			if chip > 0:
-				GameState.damage_player(chip + GameState.get_defense())
+				GameState.damage_player(chip + GameState.get_defense(), false)
 			_flash(Color(0.6, 0.75, 1.0))
 			shake(1.0, 0.1)
 			Audio.play_sfx("block")
@@ -416,9 +462,11 @@ func take_damage(amount: int, source: Node2D = null, kind: Combat.Kind = Combat.
 		GameState.message.emit(tr("MSG_UNBLOCKABLE"), Combat.KIND_COLORS[Combat.Kind.UNBLOCKABLE])
 	_receive_hit(amount)
 	if GameState.hp > 0:
+		# Sadece basic attack (NORMAL) kilitlemez: kısa hurt animasyonu, girdiyle kesilir.
+		# Alan/ağır/bloklanamaz vuruşlar (kind != NORMAL) sersemletir.
 		if kind != Combat.Kind.NORMAL:
 			_stagger()
-		elif state == State.NORMAL and sprite.has_directional("hurt"):
+		elif (state == State.NORMAL or state == State.HURT) and sprite.has_directional("hurt"):
 			_set_state(State.HURT)
 			sprite.play_directional("hurt", facing, true)
 	return Combat.Result.HIT
@@ -447,6 +495,26 @@ func _stagger() -> void:
 	_set_state(State.STAGGER)
 	_state_timer = stagger_time
 	sprite.play_directional("hurt" if sprite.has_directional("hurt") else "idle", facing, true)
+
+
+## Oyuncuyu duration saniye sersemletir (stun): hareket, saldırı, yetenek, blok ve yuvarlanma yapamaz.
+## Zaten sersemlemişse süre uzar (kısalmaz). Hücum gibi güçlü saldırılar bunu kullanır.
+func stun(duration: float) -> void:
+	if state == State.DEAD or is_invulnerable():
+		return
+	var was_stunned := state == State.STAGGER
+	_set_state(State.STAGGER)
+	_state_timer = maxf(_state_timer if was_stunned else 0.0, duration)
+	sprite.play_directional("hurt" if sprite.has_directional("hurt") else "idle", facing, true)
+	# Görsel geri bildirim: sarımsı ton + yazı (sersemlik bitince _set_state rengi geri alır)
+	sprite.modulate = Color(1.0, 0.95, 0.45)
+	if not was_stunned:
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -38), tr("MSG_STUNNED"), Color(1.0, 0.9, 0.4))
+
+
+## Sersemlemiş (stun / savunma kırılması / ağır vuruş) mi
+func is_stunned() -> bool:
+	return state == State.STAGGER
 
 
 # --- Diğer ------------------------------------------------------------------
@@ -490,6 +558,9 @@ func _set_state(new_state: State) -> void:
 	if state == State.DODGE and new_state != State.DODGE:
 		sprite.speed_scale = 1.0
 		collision_mask |= ENEMY_LAYER
+		_ignore_enemies(false)
+	if state == State.STAGGER and new_state != State.STAGGER:
+		sprite.modulate = Color.WHITE
 	state = new_state
 
 

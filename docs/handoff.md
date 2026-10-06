@@ -1,6 +1,6 @@
 # Devir Notu (Handoff)
 
-Son güncelleme: 2026-10-06. Bu dosya yeni bir Claude oturumunun **ilk okuyacağı** dosyadır. İşleri ajanlara dağıtma kuralları: `docs/agents.md`. Projenin şu anki durumunu ve sıradaki işleri anlatır. İş bitince bu dosyayı güncel tut.
+Son güncelleme: 2026-10-07. Bu dosya yeni bir Claude oturumunun **ilk okuyacağı** dosyadır. İşleri ajanlara dağıtma kuralları: `docs/agents.md`. Projenin şu anki durumunu ve sıradaki işleri anlatır. İş bitince bu dosyayı güncel tut.
 
 ## 1. Kısa geçmiş
 1. Proje **mobil (Android)** hack and slash olarak başladı. Dokunmatik joystick ve ekran butonlarıyla oynanabilir bir dikey dilim yapıldı.
@@ -8,7 +8,7 @@ Son güncelleme: 2026-10-06. Bu dosya yeni bir Claude oturumunun **ilk okuyacağ
 3. Aynı gün kullanıcı **PC'ye geçme** kararı aldı: Steam Deck destekli, gamepad ile de oynanabilir. Mobil port ileride yapılabilir. İş listesi 3. bölümde. **3.1–3.7 hepsi bitti** (2026-10-06). Kullanıcının onayı beklenen varsayılanlar 4. bölümün başında.
 
 ## 2. Şu an oyunda çalışanlar
-Hepsi otomatik testlerle doğrulandı (duman testi: 150 kontrol; boss testi: 10 boss + Malphas).
+Hepsi otomatik testlerle doğrulandı (duman testi: 241 kontrol; oyuncu sıradan vuruşta kilitlenmez, hurt animasyonu dash/saldırı ile kesilir, yalnızca `stun()` ve savunma kırılması kilitler; boss testi: 10 boss + Malphas + Fenris 3 faz testi).
 
 | Sistem | Durum | Nerede |
 |---|---|---|
@@ -99,6 +99,10 @@ Yapılanlar: Ayarlar'a tam ekran, pencere boyutu (480x270'in tam katları, ekran
 
 ## 3b. Kullanıcı geri bildirimiyle yapılanlar (2026-10-06) ✅
 Ana menü ortalama, envanterde sürükle-bırak + Split (kaydırıcı, imlece yapışan yığın), ikonların yuvaya ortalanması, eşya bilgisi kutusu (pencere büyümez), altın kesesi boyu, konuşmada sağda portre (yer tutucu), dükkânda solda çanta + satış + Split, dash ile düşmanların içinden geçme. Ayrıntı: `decisions.md`.
+**2. tur geri bildirim (2026-10-06) ✅:** yığın limiti 20 (`GameState.MAX_STACK`), gamepad ile taşı (X) / böl (Y) + B ile iptal (envanter ve dükkân, ayarlarda `menu_move`/`menu_split`), Blood Monster ve boss hücumu artık hasar verir ve stun'lar (Blood Monster 0,6 sn, boss 1,0 sn; blok/parry/yuvarlanma korur), Blood Monster normal hasarı 8, boss 2. faz çağırma işaretlerinin takılı kalması giderildi, dash düşmanları artık itmiyor. Ayrıntı ve kök nedenler: `decisions.md`. Duman testi artık 184 kontrol; boss testi alan/uyarı temizliği ve Fenris atılma kontrolleri içeriyor.
+**Dikkat (kullanıcıya sorulabilir):** Boss çağırma işaretleri (küçük sarı daire) hasar alanı değil, yardımcıların doğma yeri; oyuncular hasar alanı sanıyor. İstenirse ayrı renk/şekil verilebilir. Ayrıca bu Godot sürümünde `ui_accept`/`ui_cancel` varsayılanında gamepad A/B yok; gamepad ile menü gezinmede A'nın butona basıp basmadığı gerçek bir gamepad ile denenmeli (gerekirse `ui_accept`/`ui_cancel`'e `Controls.apply()` içinde joypad A/B eklenir).
+**3. tur geri bildirim (2026-10-07) ✅:** (1) Stun: Blood Monster hücumunda yalnızca zamanında parry korur (sıradan blok korumaz), boss hücumları (Fenris dahil) bloklanamaz/parry'lenemez (UNBLOCKABLE, kırmızı uyarı), yuvarlanma hâlâ kurtarır. (2) Hasar: Blood Monster normal hasarı 11 (~%9 can), hücum 16; `GameState.damage_player` hasar tabanı (zırh sonrası en az hasarın %25'i, en az 1). (3) Fenris 3 faz: 1. faz kılıç+alan+atılma, %60'ta 2. faz (2 Demon + 2 Blood Monster çağırır; kök neden: çağırma hazırlığını sprite olayları bölüyordu + haritadaki Fenris eski saldırı listesini eziyordu), %30'da 3. faz (çağırma sürer + 5 kırmızı yanıp sönen patlama dairesi, yalnızca oyuncuya hasar). Ayrıntı `docs/bosses.md`. (4) Stagger yalnızca Yer Sarsıntısı'ndan (boss hariç; `Enemy.stagger_resistant` ileride için); parry aynen çalışır. (5) Dev konsolu: Enter -> "zort" -> Enter dev modunu açar, **F9** konsolu açar (ışınlan, god mode, düşman çağır, çantaya eşya ekle); ayarlarda görünmez. Duman testi 220 kontrol, boss testi 20 `[OK]` + 10 boss. **Kullanıcıya sorulabilir:** F9 yerine başka tuş istenir mi; Fenris hasar/zamanlama (patlama 20 hasar, 5 daire, 7 sn bekleme; çağırma 15 sn) elle dengelenmeli; gerçek gamepad/elle oynanışta denenmedi.
+**4. tur geri bildirim (2026-10-07) ✅:** (1) Normal vuruş artık düşmanı/boss'u hiç kesintiye uğratmıyor (kök neden: `take_damage` her vuruşta HURT durumu + hurt animasyonu atıyordu; ayrıntı `decisions.md`). (2) Normal vuruş yalnızca en yakın tek sersemletilebilir mob'u sersemletir; yeni `Enemy.normal_hit_stagger_immune` (sahne başına, şimdilik hiçbirinde true); Yer Sarsıntısı hepsini sersemletir; boss yalnız parry ile. (3) Fenris çağırma her 20 sn (yardımcı yaşasa da), en fazla 8 canlı yardımcı. (4) Oyuncu ölünce boss barı kapanır. (5) "F ile konuş" ipucu 3 sn. Duman testi 233 `[OK]`, boss testi 27 `[OK]` + 10 boss.
 **Kullanıcıdan beklenen:** NPC portre PNG'leri → `assets/portraits/<id>.png` (id'ler: ezra, mira, kadir, borak, rurik, seren, pip, player; 64x64 önerilir).
 
 ## 4. Bekleyen diğer işler- **Kullanıcıya sorulacak (PC geçişinde varsayılan seçildi, kolayca değişir):**

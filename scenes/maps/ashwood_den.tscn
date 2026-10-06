@@ -4,58 +4,9 @@
 [ext_resource type="TileSet" path="res://assets/tiles/tileset.tres" id="2_axgmu"]
 [ext_resource type="Script" path="res://scripts/bosses/boss_arena.gd" id="3_aaeii"]
 [ext_resource type="PackedScene" path="res://scenes/bosses/fenris.tscn" id="4_ky617"]
-[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="5_k1crf"]
-[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="6_jqr5i"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/blood_monster.tscn" id="7_fvx4h"]
 [ext_resource type="Script" path="res://scripts/bosses/arena_gate.gd" id="8_sflej"]
 [ext_resource type="PackedScene" path="res://scenes/world/map_exit.tscn" id="9_xa515"]
 [ext_resource type="Script" path="res://scripts/world/map_exit.gd" id="10_bxp8r"]
-
-[sub_resource type="Resource" id="Attack_claws"]
-script = ExtResource("6_jqr5i")
-weight = 3.0
-damage = 12
-max_range = 30.0
-recovery = 0.8
-animation = "attack"
-hit_frame = 4
-combo_hits = 3
-
-[sub_resource type="Resource" id="Attack_leap"]
-script = ExtResource("6_jqr5i")
-type = 3
-kind = 1
-weight = 2.0
-damage = 20
-min_range = 50.0
-max_range = 170.0
-recovery = 1.2
-radius = 16.0
-windup = 0.55
-charge_speed = 320.0
-charge_distance = 150.0
-
-[sub_resource type="Resource" id="Attack_howl"]
-script = ExtResource("6_jqr5i")
-type = 4
-min_phase = 2
-damage = 0
-max_range = 300.0
-recovery = 2.0
-windup = 0.8
-summon_scene = ExtResource("7_fvx4h")
-
-[sub_resource type="Resource" id="Attack_storm"]
-script = ExtResource("6_jqr5i")
-type = 2
-kind = 2
-min_phase = 2
-weight = 1.5
-damage = 26
-max_range = 50.0
-recovery = 1.5
-radius = 56.0
-windup = 0.9
 
 [node name="AshwoodDen" type="Node2D" unique_id=1473828105]
 script = ExtResource("1_rpbau")
@@ -84,19 +35,6 @@ script = ExtResource("3_aaeii")
 trigger_size = Vector2(1088, 640)
 
 [node name="Fenris" type="CharacterBody2D" parent="Entities/BossArena" unique_id=122044252 instance=ExtResource("4_ky617")]
-collision_layer = 4
-collision_mask = 7
-motion_mode = 1
-script = ExtResource("5_k1crf")
-boss_id = "fenris"
-title_key = "BOSS_FENRIS_TITLE"
-attacks = Array[ExtResource("6_jqr5i")]([SubResource("Attack_claws"), SubResource("Attack_leap"), SubResource("Attack_howl"), SubResource("Attack_storm")])
-name_key = "BOSS_FENRIS"
-max_hp = 480
-move_speed = 70.0
-attack_range = 26.0
-poise = 120.0
-stun_time = 2.0
 
 [node name="SouthGate" type="StaticBody2D" parent="Entities/BossArena" unique_id=184113718]
 position = Vector2(0, 496)

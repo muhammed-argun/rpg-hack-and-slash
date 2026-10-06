@@ -3,13 +3,14 @@
 Bu belge tartışmamız için bir taslak. Her boss'un dövüş tarzı, saldırıları ve ilham kaynağı burada. Değerleri birlikte oynayarak ayarlayacağız.
 
 ## Ortak kurallar
-- **Fazlar:** Her boss'un **2 fazı** var. Canı %50'nin altına düşünce yeni saldırılar ekler ve hızlanır. Kral ve Malphas ayrıca birbirini izleyen iki ayrı dövüş.
+- **Fazlar:** Her boss'un **2 fazı** var (Fenris'in **3 fazı** var, aşağıda). Canı %50'nin altına düşünce yeni saldırılar ekler ve hızlanır. Kral ve Malphas ayrıca birbirini izleyen iki ayrı dövüş. Boss verisinde faz eşikleri `phase2_threshold` / `phase3_threshold` (0 = 3. faz yok), faza özel saldırı `BossAttack.min_phase`, faz açılışı `phase_opener`, saldırı bekleme süresi `cooldown`.
+- **Boss hücumu (CHARGE/atılma):** her boss'ta bloklanamaz ve parry'lenemez (kırmızı uyarı, `Combat.Kind.UNBLOCKABLE` koda gömülü); yalnızca yuvarlanma kurtarır, isabet stun verir.
 - **Saldırı türleri:**
   - **Normal:** Bloklanabilir ve parry'lenebilir.
   - **Ağır (turuncu parlama):** Bloklanabilir ama stamina'yı çok tüketir. Parry'lenirse boss sendeler.
   - **Engellenemez (kırmızı parlama):** Blok ve parry işe yaramaz, sadece yuvarlanarak kaçılır.
 - **Uyarı (telegraph):** Her saldırının okunabilir bir hazırlığı var. Hazırlık süreleri en az 0,5 saniye (oyuncu tepki verebilsin; PC'de istenirse kısaltılabilir).
-- **Denge (poise):** Boss'ların denge barı büyük. Kırılınca 2 saniye sersemler ve fazladan hasar alır.
+- **Sersemleme:** Boss'lar Yer Sarsıntısı'ndan (ve normal vuruştan) sersemlemez; yalnızca parry sersemletir (2 sn, fazladan hasar alır). Eski denge (poise) sistemi artık sersemletme tetiklemez.
 - **Arena:** Her boss'un kapalı bir arenası var. Dövüş başlayınca çıkış kapanır, ekranın üstünde boss can barı (Pixel Bars'ın BOSS şekli) belirir.
 - **Ödül:** Her boss'tan 1 **Kristal Parçası** ve büyük bir sandık düşer.
 - **Görsel:** Boss'lar aynı karakter paketlerinden geliyor. 1,5 ile 2 kat büyütülüp renk tonu verilerek "boss" hâline getirilecekler.
@@ -24,12 +25,18 @@ Bu belge tartışmamız için bir taslak. Her boss'un dövüş tarzı, saldırı
 - **İlham:** İskandinav mitolojisindeki Fenrir; Bloodborne'daki Vicar Amelia'nın vahşi atılmaları
 - **Tarz:** Hızlı, saldırgan, ani atılmalar. Oyuncuya parry zamanlamasını öğreten ilk boss.
 
-| Saldırı | Tür | Açıklama |
-|---|---|---|
-| Pençe Kombosu | Normal | Arka arkaya 3 pençe. 3.'sü parry'lenirse Fenris sendeler. |
-| Atılma | Ağır | Uzaktan oyuncuya doğru sıçrar (çizgi uyarısı). |
-| Uluma | Destek | Faz 2: 2 küçük kurt çağırır. |
-| Kül Fırtınası | Engellenemez | Faz 2: Etrafında dönerek geniş alana vurur. Kaçmak gerekir. |
+**3 fazlı (2026-10-07 yeniden tasarım).** Fazlar `Boss.phase2_threshold` (0,6) ve `phase3_threshold` (0,3) ile geçilir; geçişte şok dalgası, ekran sarsıntısı ve mesaj ("Fenris öfkelendi!" / "çılgına döndü!") çıkar, hazırlığı süren çağırma/patlama iptal edilir (sürmekte olan pençe/alan/atılma bölünmez) ve yeni fazın açılış saldırısı (`phase_opener`) hemen yapılır.
+
+| Saldırı | Tür | Faz | Açıklama |
+|---|---|---|---|
+| Pençe Kombosu | Normal | 1+ | Arka arkaya 3 pençe. 3.'sü parry'lenirse Fenris sendeler. |
+| Atılma | Engellenemez (kırmızı) | 1+ | Uzaktan oyuncuya doğru sıçrar (çizgi uyarısı). Blok/parry işe yaramaz, yuvarlanma kurtarır, isabet ederse 1 sn stun. |
+| Kül Fırtınası | Engellenemez | 1+ | Etrafında geniş alana vurur (yarıçap 56, 0,9 sn uyarı). Kaçmak gerekir. |
+| Uluma | Destek | 2+ | 4 yardımcı çağırır: 2 Demon + 2 Blood Monster (küçük sarı işaretler, 0,8 sn sonra doğarlar). Her 20 sn'de bir, yardımcılar yaşasa da ölmüş olsa da çağırır; boss'a ait en fazla 8 canlı yardımcı olur (sınıra yakınken yalnızca kalan kadar doğar, 8'deyken seçilmez). Yardımcılar XP/görev sayımı vermez. 2. faza girince ilk yapılan saldırı. |
+| Kül Patlaması | Engellenemez | 3 | Oyuncunun çevresinde 5 kırmızı, yanıp sönen daire (çağırma işaretinin 2 katı: yarıçap 20); 1,5 sn sonra patlar, 20 hasar. **Yalnızca oyuncuya zarar verir** (boss ve yardımcılar etkilenmez). 7 sn bekleme; 3. faza girince ilk yapılan saldırı. Uluma 3. fazda da sürer. |
+
+Hızlanma: 2. fazda hareket hızı x1,25 ve animasyon 1,15; 3. fazda animasyon 1,3 (hız tekrar çarpılmaz).
+Sersemletme: Fenris Yer Sarsıntısı'ndan sersemlemez (hiçbir boss sersemlemez); yalnızca parry'lenen normal saldırı onu sersemletir.
 
 ### Boss 2: Morvane, Mezar Bekçisi
 - **Bölge:** Batık Mezarlık

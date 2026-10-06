@@ -113,11 +113,9 @@ func close() -> void:
 	closed.emit()
 
 
-## Geri tuşu: önce split penceresi kapanır, sonra pencerenin kendisi.
+## Geri tuşu: önce split penceresi / elde tutulan eşya iptal edilir, sonra pencerenin kendisi kapanır.
 func go_back() -> void:
-	if bag.is_split_open():
-		bag.close_split()
-	else:
+	if not bag.handle_back():
 		close()
 
 

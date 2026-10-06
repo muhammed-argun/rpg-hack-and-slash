@@ -37,6 +37,7 @@ var _held_origin := -1
 var _held_view: Control
 var _held_icon: TextureRect
 var _held_count: Label
+var _hint_label: Label
 
 
 func _ready() -> void:
@@ -73,10 +74,91 @@ func _ready() -> void:
 	_split_button.text = "UI_SPLIT"
 	_split_button.pressed.connect(_open_split)
 	actions.add_child(_split_button)
+	# Taşı / Böl tuş ipucu (sabit yükseklik, kırpılır: pencere metne göre büyümesin)
+	_hint_label = Label.new()
+	_hint_label.theme_type_variation = &"HudLabel"
+	_hint_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_hint_label.clip_text = true
+	_hint_label.custom_minimum_size = Vector2(0, 10)
+	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_hint_label)
 	_build_split_popup()
 	_build_held_view()
 	GameState.inventory_changed.connect(refresh)
+	Controls.device_changed.connect(_refresh_hint.unbind(1))
+	Controls.bindings_changed.connect(_refresh_hint)
 	refresh()
+
+
+## Menü aksiyonları (taşı / böl). Yalnızca pencere görünürken çalışır; oyun içi aksiyonlarla çakışmaz.
+func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or Controls.capturing:
+		return
+	# Split açıkken: A (ui_accept) kaydırıcıdaki miktarı onaylar (sol/sağ kaydırıcıyı zaten ayarlar)
+	if _split_popup.visible:
+		# Gamepad A: Godot'nun varsayılan ui_accept eşlemesinde bazı sürümlerde yok, bu yüzden doğrudan da okunur
+		var accept: bool = event.is_action_pressed("ui_accept") \
+			or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A)
+		if accept and get_viewport().gui_get_focus_owner() == _split_slider:
+			get_viewport().set_input_as_handled()
+			_confirm_split()
+		return
+	if event.is_action_pressed("menu_move"):
+		var index := _cursor_slot()
+		if index >= 0:
+			get_viewport().set_input_as_handled()
+			_move_pressed(index)
+	elif event.is_action_pressed("menu_split") and _held == null:
+		var index := _cursor_slot()
+		if index >= 0 and GameState.bag[index] != null and GameState.bag[index].count >= 2:
+			get_viewport().set_input_as_handled()
+			select(index)
+			_open_split()
+
+
+# Gamepad'de odaklı yuva; fareyle oynarken imlecin altındaki yuva (yoksa odaklı yuva)
+func _cursor_slot() -> int:
+	if not Controls.using_gamepad:
+		var mouse := get_global_mouse_position()
+		for i in _slots.size():
+			if _slots[i].get_global_rect().has_point(mouse):
+				return i
+	var focus := get_viewport().gui_get_focus_owner()
+	return _slots.find(focus) if focus is ItemSlot else -1
+
+
+## Taşı tuşu: elde bir şey yoksa yuvadaki yığının tamamını eline alır; varsa o yuvaya bırakır
+## (boşsa yerleşir, aynı türse birleşir, farklıysa yer değiştirir).
+func _move_pressed(index: int) -> void:
+	if _held:
+		_on_slot_pressed(index)
+		return
+	if GameState.bag[index] == null:
+		return
+	_held_origin = index
+	_held = GameState.take_from_slot(index, GameState.bag[index].count)
+	selected = -1
+	_hide_tooltip()
+	refresh()
+
+
+## Geri tuşu (B / Esc): önce açık Split penceresini, sonra elde tutulan yığını iptal eder.
+## Bir şey iptal edildiyse true döner (pencere kapanmasın).
+func handle_back() -> bool:
+	if _split_popup.visible:
+		_split_popup.hide()
+		return true
+	if _held != null:
+		return_held()
+		return true
+	return false
+
+
+func _refresh_hint() -> void:
+	if not is_node_ready():
+		return
+	var key := "UI_BAG_HINT_HELD" if _held != null else "UI_BAG_HINT"
+	_hint_label.text = Controls.format_action_keys(tr(key))
 
 
 func _process(_delta: float) -> void:
@@ -135,9 +217,11 @@ func return_held() -> void:
 		return
 	var stack := _held
 	_held = null
+	var leftover := stack
 	if _held_origin >= 0 and (GameState.bag[_held_origin] == null or GameState.bag[_held_origin].can_stack_with(stack)):
-		GameState.place_in_slot(stack, _held_origin)
-	elif GameState.add_to_bag(stack) > 0:
+		leftover = GameState.place_in_slot(stack, _held_origin)
+	# Yuvaya sığmayan kısım (yığın sınırı) başka yuvaya
+	if leftover != null and GameState.add_to_bag(leftover) > 0:
 		# Hiç yer yoksa (olmamalı) eşya kaybolmasın: satılır
 		GameState.gold += stack.unit_value() * stack.count
 		GameState.gold_changed.emit(GameState.gold)
@@ -288,6 +372,7 @@ func _build_held_view() -> void:
 
 func _refresh_held_view() -> void:
 	_held_view.visible = _held != null
+	_refresh_hint()
 	if _held:
 		IconFit.place(_held_icon, _held.get_icon(), Rect2(Vector2.ZERO, ItemSlot.ICON_AREA.size))
 		_held_count.text = str(_held.count) if _held.count > 1 else ""

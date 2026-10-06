@@ -13,6 +13,8 @@ extends Resource
 ##   TELEPORT   kaybolup oyuncunun yakınında belirme (teleport_distance)
 ##   BARRAGE    oyuncunun çevresine art arda düşen alan vuruşları: meteor, kemik kafes (count, spread)
 ##   LINE       boss'tan oyuncuya doğru uzun çizgi vuruşu: ışın, yer yarığı (length, radius = yarı kalınlık)
+## CHARGE saldırıları kind ne olursa olsun UNBLOCKABLE sayılır (Boss._execute): boss hücumu bloklanamaz,
+## parry'lenemez; yalnızca yuvarlanma (i-frame) kurtarır ve isabet ederse stun verir.
 
 enum Type { MELEE, SLAM, RING, CHARGE, SUMMON, PROJECTILE, TELEPORT, BARRAGE, LINE }
 
@@ -28,6 +30,10 @@ enum Type { MELEE, SLAM, RING, CHARGE, SUMMON, PROJECTILE, TELEPORT, BARRAGE, LI
 @export var max_range: float = 40.0
 ## Saldırıdan sonra bir sonraki saldırıya kadar bekleme
 @export var recovery: float = 1.0
+## Bu saldırı bir kez yapıldıktan sonra yeniden seçilebilmesi için geçmesi gereken süre (0 = sınırsız)
+@export var cooldown: float = 0.0
+## true ise boss min_phase fazına girince bu saldırıyı ilk olarak yapar (faz açılışı)
+@export var phase_opener: bool = false
 @export_group("Alan")
 @export var radius: float = 36.0
 @export var offset: float = 0.0
@@ -40,11 +46,15 @@ enum Type { MELEE, SLAM, RING, CHARGE, SUMMON, PROJECTILE, TELEPORT, BARRAGE, LI
 @export_group("Hücum")
 @export var charge_speed: float = 280.0
 @export var charge_distance: float = 130.0
+## İsabet ederse oyuncunun sersemleme (stun) süresi; blok/parry/yuvarlanma korur
+@export var stun_time: float = 1.0
 @export_group("Mermi / Yağmur / Çizgi")
 ## Mermi veya yağmurdaki alan sayısı
 @export var count: int = 3
 ## PROJECTILE: yelpaze açısı (derece). BARRAGE: oyuncunun çevresindeki dağılma yarıçapı (piksel)
 @export var spread: float = 30.0
+## BARRAGE: uyarı daireleri yanıp söner (kırmızı patlama daireleri)
+@export var blink: bool = false
 @export var projectile_speed: float = 110.0
 @export_range(0.0, 1.0) var homing: float = 0.0
 @export var projectile_color: Color = Color(0.75, 0.45, 1.0)
@@ -54,6 +64,8 @@ enum Type { MELEE, SLAM, RING, CHARGE, SUMMON, PROJECTILE, TELEPORT, BARRAGE, LI
 @export var teleport_distance: float = 40.0
 @export_group("Çağırma")
 @export var summon_scene: PackedScene
+## Doluysa summon_scene yerine kullanılır: i. yardımcı summon_scenes[i % boyut] sahnesinden doğar
+@export var summon_scenes: Array[PackedScene] = []
 @export var summon_count: int = 2
 
 

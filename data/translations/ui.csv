@@ -266,3 +266,10 @@ UI_SPLIT_TITLE,Kaç tane ayrılsın?,How many to split off?
 UI_SELL_PRICE,Satış: %d altın,Sells for: %d gold
 UI_CANNOT_SELL,Bu eşya satılamaz.,This item cannot be sold.
 UI_SHOP_BUY,Satın al,Buy
+ACTION_MENU_MOVE,Çanta: taşı / bırak,Bag: pick up / drop
+ACTION_MENU_SPLIT,Çanta: böl,Bag: split
+UI_BAG_HINT,{menu_move}: Taşı  {menu_split}: Böl,{menu_move}: Move  {menu_split}: Split
+MSG_STUNNED,Sersemledin!,Stunned!
+UI_BAG_HINT_HELD,{menu_move}: Bırak  Geri: İptal,{menu_move}: Drop  Back: Cancel
+MSG_BOSS_PHASE_2,%s öfkelendi!,%s is enraged!
+MSG_BOSS_PHASE_3,%s çılgına döndü!,%s goes berserk!

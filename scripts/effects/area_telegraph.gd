@@ -6,6 +6,9 @@ extends Node2D
 
 enum Shape { CIRCLE, LINE }
 
+## Dolum süresi bittikten sonra patlatılmayan uyarının en fazla bu kadar saniye daha yaşaması
+const OVERDUE_LIFETIME := 1.5
+
 
 var shape: Shape = Shape.CIRCLE
 var radius := 32.0
@@ -15,8 +18,13 @@ var duration := 0.6
 ## Renkler saldırı türüne göre: turuncu = ağır, kırmızı = engellenemez
 var fill_color := Combat.telegraph_color(Combat.Kind.HEAVY)
 var edge_color := Combat.edge_color(Combat.Kind.HEAVY)
+## true ise alan patlayana kadar giderek hızlanan bir ritimle yanıp söner
+var blink := false
+var _blink_phase := 0.0
 var _progress := 0.0
 var _flash := 0.0
+var _age := 0.0
+var _detonated := false
 
 
 ## Yerde daire şeklinde uyarı.
@@ -51,6 +59,7 @@ func _set_kind(kind: Combat.Kind) -> void:
 
 ## Saldırı anı: kısa bir parlamadan sonra kaybolur.
 func detonate() -> void:
+	_detonated = true
 	_progress = 1.0
 	_flash = 1.0
 	var tween := create_tween()
@@ -60,8 +69,17 @@ func detonate() -> void:
 
 
 func _process(delta: float) -> void:
+	# Güvenlik ağı: saldırı bölünür / sahibi ölürse kimse detonate() çağırmaz; uyarı alanı
+	# süresi dolduktan biraz sonra kendiliğinden silinir (haritada takılı kalmasın)
+	_age += delta
+	if not _detonated and _age > duration + OVERDUE_LIFETIME:
+		queue_free()
+		return
 	if _flash <= 0.0:
 		_progress = minf(1.0, _progress + delta / maxf(duration, 0.01))
+	if blink and not _detonated:
+		_blink_phase += delta * (2.0 + 4.0 * _progress) * TAU
+		modulate.a = 0.5 + 0.5 * (0.5 + 0.5 * sin(_blink_phase))
 	queue_redraw()
 
 

@@ -6,7 +6,7 @@ extends CharacterBody2D
 ##   SLAM:   yerde uyarı alanı belirir, kısa bir hazırlıktan sonra alandaki oyuncuya vurur
 ##   CHARGE: hücum yolu gösterilir, sonra o yönde hızla atılır
 ## Saldırı türleri (Combat.Kind): normal saldırılar bloklanabilir; özel saldırı ağır (turuncu) veya
-## engellenemez (kırmızı) olabilir. Parry'lenen ya da dengesi (poise) kırılan düşman sersemler.
+## engellenemez (kırmızı) olabilir. Parry'lenen ya da Yer Sarsıntısı'na yakalanan düşman sersemler.
 ## Yeni düşman türü için: mevcut bir düşman sahnesini kopyala, Sprite'ın sprite_folder'ını ve değerleri değiştir.
 
 signal died(enemy: Enemy)
@@ -34,8 +34,16 @@ enum Special { NONE, SLAM, CHARGE }
 @export var knockback_force: float = 120.0
 @export var attack_kind: Combat.Kind = Combat.Kind.NORMAL
 
-@export_group("Denge (Poise)")
-## Bu kadar hasar birikince düşman sersemler; vuruş almadan poise_recover_delay geçerse sıfırlanır
+## Hücum isabetinde gövde yarıçaplarına eklenen pay (piksel)
+const CHARGE_HIT_MARGIN := 2.0
+
+@export_group("Sersemleme (Stagger)")
+## Sersemleten kaynaklar: Yer Sarsıntısı (alandaki hepsi), normal vuruş (vuruş alanındaki en yakın TEK mob), parry.
+## stagger_resistant true ise yetenek/normal vuruş sersemletmesi işlemez (ileride güçlü mob'lar için; parry yine işler)
+@export var stagger_resistant: bool = false
+## true ise normal vuruş bu düşmanı sersemletmez ve "en yakın tek mob" seçiminde sayılmaz (Yer Sarsıntısı yine sersemletir)
+@export var normal_hit_stagger_immune: bool = false
+## Eski denge (poise) sistemi: artık sersemletme tetiklemiyor, sahneler değer atadığı için alan duruyor
 @export var poise: float = 30.0
 @export var poise_recover_delay: float = 2.5
 @export var stun_time: float = 1.5
@@ -60,6 +68,8 @@ enum Special { NONE, SLAM, CHARGE }
 @export var special_hit_frame: int = 3
 @export var charge_speed: float = 260.0
 @export var charge_distance: float = 110.0
+## CHARGE: oyuncuya isabet edince (blok/parry/yuvarlanma yoksa) oyuncunun sersemleme (stun) süresi
+@export var charge_stun_time: float = 0.6
 
 var hp: int
 var state: State = State.IDLE
@@ -75,9 +85,10 @@ var _telegraph: AreaTelegraph
 var _special_center := Vector2.ZERO
 var _charge_direction := Vector2.ZERO
 var _charge_time := 0.0
+var _charge_last_position := Vector2.ZERO
+# Oyuncu yuvarlanırken ondan çarpışmayı kapattık mı (içinden geçsin, itmesin)
+var _ignoring_player := false
 var _windup_held := false
-var _poise_damage := 0.0
-var _poise_timer := 0.0
 var _stun_timer := 0.0
 var _glow_tween: Tween
 # Sahnede verilen renk tonu (yanıp sönme bitince geri dönülür)
@@ -113,11 +124,9 @@ func _physics_process(delta: float) -> void:
 		return
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_special_cooldown = maxf(0.0, _special_cooldown - delta)
-	_poise_timer -= delta
-	if _poise_timer <= 0.0:
-		_poise_damage = 0.0
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player") as Player
+	_update_player_collision()
 
 	match state:
 		State.IDLE, State.CHASE, State.RETURN:
@@ -135,6 +144,22 @@ func _physics_process(delta: float) -> void:
 	velocity += _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, knockback_force * 8.0 * delta)
 	move_and_slide()
+
+
+# Oyuncu yuvarlanırken (dash) ona karşı çarpışma kapatılır: düşman oyuncuyu itmez, oyuncu da onu itmez.
+# Oyuncu bunu başlarken mevcut düşmanlar için kendisi yapar; burası dash sırasında doğan düşmanları
+# (çağrılan yardımcılar) ve dash bitişini yakalar.
+func _update_player_collision() -> void:
+	var dashing := is_instance_valid(_player) and _player.state == Player.State.DODGE
+	if dashing and not _ignoring_player:
+		_ignoring_player = true
+		add_collision_exception_with(_player)
+		_player.add_collision_exception_with(self)
+	elif not dashing and _ignoring_player:
+		_ignoring_player = false
+		if is_instance_valid(_player):
+			remove_collision_exception_with(_player)
+			_player.remove_collision_exception_with(self)
 
 
 func _update_movement() -> void:
@@ -189,7 +214,10 @@ func _direction_towards(target: Vector2) -> Vector2:
 	return global_position.direction_to(next)
 
 
-func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scale: float = 1.0, poise_scale: float = 1.0) -> void:
+## stagger: vuruş düşmanı sersemletsin mi (Yer Sarsıntısı hepsine, normal vuruş yalnızca en yakın tek mob'a
+## true verir; bkz. can_be_staggered). Sersemletmeyen vuruş düşmanı HİÇ kesintiye uğratmaz: durum,
+## animasyon, hazırlık ve hareket değişmez; yalnızca hasar, kısa ton parlaması ve hafif geri savurma olur.
+func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scale: float = 1.0, stagger: bool = false) -> void:
 	if state == State.DEAD:
 		return
 	if state == State.STUNNED:
@@ -204,21 +232,18 @@ func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scal
 		return
 	if state == State.STUNNED:
 		return
-	# Denge: yeterince hasar birikince sersemler (özel saldırı sırasında bile)
-	_poise_damage += amount * poise_scale
-	_poise_timer = poise_recover_delay
-	if _poise_damage >= poise:
+	# Yetenek sersemletmesi (özel saldırı sırasında bile bölünür)
+	if stagger and can_be_staggered():
 		stun()
 		return
 	# Özel saldırı sırasında düşman sendelemez ve geri savrulmaz
 	if state == State.SPECIAL or state == State.CHARGING:
 		return
 	_knockback = from_position.direction_to(global_position) * knockback_force * knockback_scale
-	# Vurulan düşman her zaman oyuncuya saldırmaya başlar
-	state = State.CHASE
-	if sprite.has_directional("hurt"):
-		state = State.HURT
-		sprite.play_directional("hurt", facing, true)
+	# Vurulan boşta/dönen düşman oyuncuya saldırmaya başlar; meşgul (saldıran, hücumdaki) düşmanın durumu değişmez.
+	# (Eskiden burada HURT durumu + hurt animasyonu vardı: hareketi ve saldırı hazırlığını kesiyordu.)
+	if state == State.IDLE or state == State.RETURN:
+		state = State.CHASE
 
 
 func _start_attack() -> void:
@@ -314,20 +339,52 @@ func _special_hit() -> void:
 				state = State.CHASE
 		Special.CHARGE:
 			state = State.CHARGING
+			# _hit_done yukarıda true yapıldı; hücum kendi tek vuruşunu bu bayrakla izler
+			_hit_done = false
 			_charge_time = charge_distance / charge_speed
+			_charge_last_position = global_position
 
 
 func _update_charge(delta: float) -> void:
 	velocity = _charge_direction * charge_speed
 	_charge_time -= delta
-	# Hücum sırasında oyuncuya bir kez çarpabilir
-	if not _hit_done and _distance_to_player() <= special_radius:
+	# Hücum sırasında oyuncuya en fazla bir kez çarpabilir
+	if not _hit_done and _charge_touches_player():
 		_hit_done = true
-		if _player.take_damage(special_damage, self, special_kind) == Combat.Result.HIT:
+		var result := _player.take_damage(special_damage, self, special_kind)
+		# Yalnızca zamanında parry (düşman da sersemler) ve yuvarlanma (i-frame) stun'dan korur;
+		# sıradan blok korumaz (hasar blok kuralıyla azalır ama oyuncu yine sersemler)
+		if result != Combat.Result.PARRIED and result != Combat.Result.DODGED:
 			_player.shake(1.5, 0.15)
+			_player.stun(charge_stun_time)
+	_charge_last_position = global_position
 	if _charge_time <= 0.0:
 		velocity = Vector2.ZERO
 		state = State.CHASE
+
+
+# Hücum yolu (önceki konumdan şimdiki konuma) oyuncuyla temas ediyor mu. Oyuncunun gövdesi hücumu
+# fiziksel olarak durdurduğu için merkezler arası mesafe special_radius'a hiç inmeyebilir;
+# bu yüzden iki gövdenin yarıçapı da hesaba katılır.
+func _charge_touches_player() -> bool:
+	if _player == null or not _player.is_inside_tree() or _player.state == Player.State.DEAD:
+		return false
+	var reach := maxf(special_radius, shape_radius(collision) + shape_radius(_player.collision)) + CHARGE_HIT_MARGIN
+	var closest := Geometry2D.get_closest_point_to_segment(_player.global_position, _charge_last_position, global_position)
+	return closest.distance_to(_player.global_position) <= reach
+
+
+## Bir çarpışma şeklinin yaklaşık yarıçapı (ölçek dahil)
+static func shape_radius(collision_node: CollisionShape2D) -> float:
+	var scale_factor := maxf(absf(collision_node.global_scale.x), absf(collision_node.global_scale.y))
+	var shape := collision_node.shape
+	if shape is CircleShape2D:
+		return shape.radius * scale_factor
+	if shape is CapsuleShape2D:
+		return shape.radius * scale_factor
+	if shape is RectangleShape2D:
+		return maxf(shape.size.x, shape.size.y) * 0.5 * scale_factor
+	return 8.0 * scale_factor
 
 
 func _cancel_special() -> void:
@@ -345,6 +402,16 @@ func on_parried() -> void:
 		stun()
 
 
+## Yetenek (Yer Sarsıntısı) bu düşmanı sersemletebilir mi. Boss'lar override eder (hiç sersemlemez).
+func can_be_staggered() -> bool:
+	return not stagger_resistant
+
+
+## Normal vuruşla sersemletilebilir mi (en yakın tek mob seçiminde aday olur). Yer Sarsıntısı bunu sormaz.
+func can_be_normal_hit_staggered() -> bool:
+	return can_be_staggered() and not normal_hit_stagger_immune
+
+
 ## Düşmanı stun_time saniye sersemletir; bu sürede daha fazla hasar alır.
 func stun() -> void:
 	if state == State.DEAD:
@@ -352,7 +419,6 @@ func stun() -> void:
 	_cancel_special()
 	state = State.STUNNED
 	_stun_timer = stun_time
-	_poise_damage = 0.0
 	velocity = Vector2.ZERO
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -38), tr("MSG_STAGGER"), Color(1.0, 0.85, 0.3))
 	sprite.play_directional("hurt" if sprite.has_directional("hurt") else "idle", facing, true)
@@ -381,6 +447,13 @@ func _stop_glow() -> void:
 
 
 # --- Ölüm ve yardımcılar ---------------------------------------------------
+
+# Düşman silinirken (ölüm, harita değişimi, test temizliği) uyarı alanı haritada yetim kalmasın
+func _exit_tree() -> void:
+	if _telegraph and is_instance_valid(_telegraph):
+		_telegraph.queue_free()
+	_telegraph = null
+
 
 func _die() -> void:
 	_cancel_special()

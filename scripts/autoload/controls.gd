@@ -26,6 +26,7 @@ const REBINDABLE := [
 	"skill_1", "skill_2", "skill_3",
 	"quick_slot_1", "quick_slot_2",
 	"swap_weapons", "toggle_inventory", "toggle_character", "toggle_quests", "pause",
+	"menu_move", "menu_split",
 ]
 
 ## Varsayılan atamalar: [klavye/fare, gamepad]. Kodlar: "key:<fiziksel tuş>", "mouse:<buton>",
@@ -50,6 +51,10 @@ const DEFAULTS := {
 	"toggle_quests": ["key:%d" % KEY_J, "joy:%d" % JOY_BUTTON_DPAD_DOWN],
 	"swap_weapons": ["key:%d" % KEY_Q, "joy:%d" % JOY_BUTTON_LEFT_SHOULDER],
 	"pause": ["key:%d" % KEY_ESCAPE, "joy:%d" % JOY_BUTTON_START],
+	# Çanta menüsü (envanter / dükkân): yalnızca pencere açıkken anlamlı; oyun içi aksiyonlarla aynı
+	# tuşu paylaşabilir çünkü pencere açıkken oyun duraklıyor
+	"menu_move": ["key:%d" % KEY_X, "joy:%d" % JOY_BUTTON_X],
+	"menu_split": ["key:%d" % KEY_V, "joy:%d" % JOY_BUTTON_Y],
 	# Nişan (sağ çubuk); ayarlarda gösterilmez
 	"aim_up": ["", "axis:%d:-1" % JOY_AXIS_RIGHT_Y],
 	"aim_down": ["", "axis:%d:1" % JOY_AXIS_RIGHT_Y],
@@ -176,7 +181,8 @@ func load_bindings() -> void:
 	if config.load(config_path) != OK or not config.has_section(SECTION):
 		return
 	for action: String in bindings:
-		var saved: Variant = config.get_value(SECTION, action, null)
+		# Yeni eklenen aksiyonlar eski ayar dosyasında yoktur; varsayılan verilmezse Godot hata yazar
+		var saved: Variant = config.get_value(SECTION, action, [])
 		if saved is Array and saved.size() == 2:
 			bindings[action] = [str(saved[0]), str(saved[1])]
 

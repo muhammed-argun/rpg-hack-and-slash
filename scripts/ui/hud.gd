@@ -48,6 +48,8 @@ var _windows_open := false
 var _prompt_target: Interactable
 var _hotbar: Hotbar
 var _quests: QuestWindow
+var _dev_prompt: DevPrompt
+var _dev_console: DevConsole
 
 
 func _ready() -> void:
@@ -58,6 +60,7 @@ func _ready() -> void:
 	GameState.message.connect(_on_message)
 	GameState.boss_started.connect(_on_boss_started)
 	GameState.boss_ended.connect(_on_boss_ended)
+	GameState.player_died.connect(_on_player_died_hide_boss_bar)
 	GameState.xp_changed.connect(_on_xp_changed)
 	GameState.level_up.connect(_on_level_up)
 	Quests.tracked_changed.connect(_refresh_quest_tracker.unbind(1))
@@ -90,6 +93,13 @@ func _ready() -> void:
 	$Root.add_child(_quests)
 	$Root.move_child(_quests, inventory.get_index() + 1)
 	_quests.closed.connect(_on_window_closed)
+	# Geliştirici araçları (komut çubuğu + konsol); pencereler gibi duraklatır
+	_dev_prompt = DevPrompt.new()
+	$Root.add_child(_dev_prompt)
+	_dev_prompt.closed.connect(_on_window_closed)
+	_dev_console = DevConsole.new()
+	$Root.add_child(_dev_console)
+	_dev_console.closed.connect(_on_window_closed)
 	_hotbar = Hotbar.new()
 	$Root.add_child(_hotbar)
 	$Root.move_child(_hotbar, interact_prompt.get_index())
@@ -162,8 +172,46 @@ func show_map_name(key: String) -> void:
 	tween.tween_property(map_name, "modulate:a", 0.0, 0.8)
 
 
+# Geliştirici tuşları: Enter komut çubuğunu açar ("zort" yazılırsa dev modu açılır); dev modu açıkken
+# DevConsole.TOGGLE_KEY konsolu açar/kapatır. Yalnızca arayüz tuşu tüketmediyse ve hiçbir pencere
+# açık değilken çalışır (Enter menülerde onay tuşu olduğu için çakışmasın).
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or Controls.capturing:
+		return
+	if key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER:
+		if open_dev_prompt():
+			get_viewport().set_input_as_handled()
+	elif key.physical_keycode == DevConsole.TOGGLE_KEY or key.keycode == DevConsole.TOGGLE_KEY:
+		if toggle_dev_console():
+			get_viewport().set_input_as_handled()
+
+
+## Komut çubuğunu açar; pencere/diyalog açıksa ya da oyun duraklıysa açmaz. Açıldıysa true.
+func open_dev_prompt() -> bool:
+	if get_tree().paused or _is_busy_except(null):
+		return false
+	_on_window_opened()
+	_dev_prompt.open()
+	return true
+
+
+## Dev konsolunu açar/kapatır (yalnızca GameState.dev_mode açıkken). İşlem yapıldıysa true.
+func toggle_dev_console() -> bool:
+	if not GameState.dev_mode:
+		return false
+	if _dev_console.visible:
+		_dev_console.close()
+		return true
+	if get_tree().paused or _is_busy_except(null):
+		return false
+	_on_window_opened()
+	_dev_console.open()
+	return true
+
+
 func _is_busy_except(window: Control) -> bool:
-	for other: Control in [inventory, _quests, crafting, shop, smith, dialogue_box, pause_menu]:
+	for other: Control in [inventory, _quests, crafting, shop, smith, dialogue_box, pause_menu, _dev_prompt, _dev_console]:
 		if other != window and other.visible:
 			return true
 	return false
@@ -171,7 +219,7 @@ func _is_busy_except(window: Control) -> bool:
 
 # Açık olan oyun penceresini kapatır (geri tuşu). Bir pencere kapandıysa true döner.
 func _close_top_window() -> bool:
-	for window: Control in [smith, shop, crafting, inventory, _quests]:
+	for window: Control in [smith, shop, crafting, inventory, _quests, _dev_prompt, _dev_console]:
 		if window.visible:
 			# Envanter ve dükkânda önce split penceresi kapanır
 			window.call("go_back" if window.has_method("go_back") else "close")
@@ -319,6 +367,16 @@ func _on_boss_ended(boss: Node) -> void:
 	var tween := boss_bar.create_tween()
 	tween.tween_interval(1.0)
 	tween.tween_callback(boss_bar.hide)
+
+
+# Oyuncu ölünce boss barı hemen kalkar. Boss'un durumuna dokunulmaz (oyuncu geri gelip arenaya girince
+# harita yeniden yüklenir, boss canı dolu başlar ve boss_started bar'ı yeniden gösterir)
+func _on_player_died_hide_boss_bar() -> void:
+	if is_instance_valid(_boss) and _boss.health_changed.is_connected(_on_boss_health_changed):
+		_boss.health_changed.disconnect(_on_boss_health_changed)
+	_boss = null
+	quest_tracker.modulate.a = 1.0
+	boss_bar.hide()
 
 
 func _on_hp_changed(current: int, maximum: int) -> void:

@@ -14,7 +14,12 @@ const HINTS := [
 	["skill", "HINT_SKILL", "outside_town"],
 ]
 
+## Bir eylemle tamamlanmayan ipuçları bu kadar saniye gösterilip kaybolur ve bir daha çıkmaz
+## ("talk": biriyle konuşana kadar ekranda kalması can sıkıyordu)
+const TIMED_HINTS := {"talk": 3.0}
+
 var _label: Label
+var _shown_at_msec := 0
 var _current := ""
 var _current_key := ""
 var _start_position := Vector2.INF
@@ -49,6 +54,10 @@ func _process(delta: float) -> void:
 		return
 	if _current.is_empty():
 		_pick_next()
+		return
+	# Süreli ipucu: süre dolunca kaybolur (konuşma ya da başka bir eylem beklenmez)
+	if TIMED_HINTS.has(_current) and Time.get_ticks_msec() - _shown_at_msec >= int(TIMED_HINTS[_current] * 1000.0):
+		_complete(_current)
 		return
 	# Tamamlanma koşulları
 	match _current:
@@ -95,6 +104,7 @@ func _show(id: String, key: String) -> void:
 	_current = id
 	_current_key = key
 	_start_position = Vector2.INF
+	_shown_at_msec = Time.get_ticks_msec()
 	_refresh_text()
 	show()
 	modulate.a = 0.0
