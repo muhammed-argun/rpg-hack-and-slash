@@ -27,7 +27,8 @@
 		"ui_close": ["res://assets/audio/sfx/ui_close.ogg"],
 		"dialogue": ["res://assets/audio/sfx/dialogue_blip.ogg"],
 		"craft": ["res://assets/audio/sfx/craft.ogg"],
-		"anvil": ["res://assets/audio/sfx/anvil.ogg"]
+		"anvil": ["res://assets/audio/sfx/anvil.ogg"],
+		"equip": ["res://assets/audio/sfx/equip.ogg"]
 	},
 	"music": {
 		"menu": "res://assets/audio/music/menu.ogg",

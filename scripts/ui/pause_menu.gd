@@ -27,6 +27,7 @@ func _ready() -> void:
 	_panel = PanelContainer.new()
 	_panel.theme_type_variation = &"WindowPanel"
 	_panel.custom_minimum_size = Vector2(150, 0)
+	_panel.add_to_group("menus")
 	add_child(_panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -54,7 +55,7 @@ func _ready() -> void:
 func open() -> void:
 	show()
 	_panel.show()
-	_settings.hide()
+	_settings.hide_all()
 	_confirm.hide()
 	_panel.reset_size()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
@@ -65,6 +66,16 @@ func resume() -> void:
 	hide()
 	get_tree().paused = false
 	resumed.emit()
+
+
+## Geri tuşu (Esc / gamepad B): alt penceredeyse duraklatma menüsüne döner, değilse oyuna döner.
+func go_back() -> void:
+	if _settings.go_back():
+		return
+	if _confirm.visible:
+		_confirm.cancel()
+		return
+	resume()
 
 
 func _open_settings() -> void:

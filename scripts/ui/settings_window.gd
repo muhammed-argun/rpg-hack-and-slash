@@ -1,7 +1,7 @@
 class_name SettingsWindow
 extends PanelContainer
-## Ayarlar penceresi: dil, müzik ve efekt sesi, titreşim. Değişiklikler anında uygulanır
-## ve Settings servisi tarafından kaydedilir. Hem ana menüde hem oyunda kullanılır.
+## Ayarlar penceresi: dil, müzik ve efekt sesi, titreşim, kontroller (tuş atama). Değişiklikler
+## anında uygulanır ve Settings/Controls servisleri tarafından kaydedilir. Hem ana menüde hem oyunda kullanılır.
 
 signal closed
 
@@ -9,11 +9,16 @@ var _language: OptionButton
 var _music: HSlider
 var _sfx: HSlider
 var _vibration: CheckBox
+var _fullscreen: CheckBox
+var _window_size: OptionButton
+var _vsync: CheckBox
+var _controls: ControlsWindow
 
 
 func _ready() -> void:
 	theme_type_variation = &"WindowPanel"
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("menus")
 	custom_minimum_size = Vector2(220, 0)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -46,6 +51,32 @@ func _ready() -> void:
 		Settings.set_vibration(on))
 	box.add_child(_vibration)
 
+	_fullscreen = CheckBox.new()
+	_fullscreen.text = "UI_FULLSCREEN"
+	_fullscreen.toggled.connect(func(on: bool) -> void:
+		Settings.set_fullscreen(on)
+		_window_size.disabled = on)
+	box.add_child(_fullscreen)
+	# Pencere boyutu: temel çözünürlüğün tam katları (pixel art keskin kalsın)
+	_window_size = OptionButton.new()
+	_window_size.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_window_size.item_selected.connect(func(index: int) -> void:
+		Settings.set_window_scale(_window_size.get_item_id(index)))
+	box.add_child(_row("UI_WINDOW_SIZE", _window_size))
+	_vsync = CheckBox.new()
+	_vsync.text = "UI_VSYNC"
+	_vsync.toggled.connect(func(on: bool) -> void:
+		Settings.set_vsync(on))
+	box.add_child(_vsync)
+	var controls_button := Button.new()
+	controls_button.text = "UI_CONTROLS"
+	controls_button.pressed.connect(_open_controls)
+	box.add_child(controls_button)
+	# Kontroller penceresi bu pencerenin kardeşi: bu pencere gizlenince o görünür kalsın
+	_controls = ControlsWindow.new()
+	_controls.closed.connect(open)
+	get_parent().add_child.call_deferred(_controls)
+
 	box.add_child(HSeparator.new())
 	var close_button := Button.new()
 	close_button.text = "UI_CLOSE"
@@ -59,9 +90,42 @@ func open() -> void:
 	_music.set_value_no_signal(Settings.music_volume)
 	_sfx.set_value_no_signal(Settings.sfx_volume)
 	_vibration.set_pressed_no_signal(Settings.vibration)
+	_fullscreen.set_pressed_no_signal(Settings.fullscreen)
+	_vsync.set_pressed_no_signal(Settings.vsync)
+	_window_size.clear()
+	var base := Vector2i(ProjectSettings.get_setting("display/window/size/viewport_width"), ProjectSettings.get_setting("display/window/size/viewport_height"))
+	for scale in range(1, Settings.max_window_scale() + 1):
+		_window_size.add_item("%dx%d" % [base.x * scale, base.y * scale], scale)
+	_window_size.select(_window_size.get_item_index(clampi(Settings.window_scale, 1, Settings.max_window_scale())))
+	_window_size.disabled = Settings.fullscreen
 	show()
 	reset_size()
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+## Geri tuşu (Esc / gamepad B): Kontroller açıksa ayarlara, değilse bir üst menüye döner.
+## Bu pencerelerden biri açıktıysa true döner.
+func go_back() -> bool:
+	if _controls.visible:
+		if not _controls.is_listening():
+			_controls.close()
+		return true
+	if visible:
+		close()
+		return true
+	return false
+
+
+## Kontroller dahil hepsini sinyal vermeden gizler (duraklatma menüsü yeniden açılırken).
+func hide_all() -> void:
+	if _controls.visible:
+		_controls.close()
+	hide()
+
+
+func _open_controls() -> void:
+	hide()
+	_controls.open()
 
 
 func close() -> void:

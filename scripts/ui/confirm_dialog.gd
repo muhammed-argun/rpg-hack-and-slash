@@ -9,6 +9,8 @@ var _label: Label
 
 
 func _ready() -> void:
+	# Gamepad ile açılınca ilk butonu odaklansın (Controls.focus_top_menu)
+	add_to_group("menus")
 	theme_type_variation = &"WindowPanel"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var box := VBoxContainer.new()
@@ -45,6 +47,11 @@ func ask(message_key: String) -> void:
 	# Ekranın ortasına yerleş
 	reset_size()
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+## Hayır demekle aynı (Esc / gamepad B).
+func cancel() -> void:
+	_answer(false)
 
 
 func _answer(yes: bool) -> void:

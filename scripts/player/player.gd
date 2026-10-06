@@ -2,8 +2,8 @@ class_name Player
 extends CharacterBody2D
 ## Oyuncu karakteri (şimdilik Warrior): hareket, saldırı, alan yeteneği, blok/parry, yuvarlanma,
 ## iksirler ve NPC'lerle etkileşim.
-## Girdi aksiyonları: move_left/right/up/down, attack, interact, skill, block, dodge, use_potion,
-## use_mana_potion (klavye ve gamepad aynı aksiyonları tetikler).
+## Girdi aksiyonları: move_left/right/up/down, attack, interact, skill_1, block, dodge, quick_slot_1,
+## quick_slot_2 (klavye ve gamepad aynı aksiyonları tetikler; atamalar Controls autoload'unda).
 ## Yakında bir NPC varsa etkileşim tuşu (interact) konuşmayı başlatır.
 
 signal interactable_changed(interactable: Interactable)
@@ -13,6 +13,14 @@ enum State { NORMAL, ATTACK, SKILL, BLOCK, DODGE, HURT, STAGGER, DEAD }
 # Joystick'teki çok küçük yatay sapmalar karakteri döndürmesin diye
 const TURN_THRESHOLD := 0.1
 const NO_RESOURCE_MESSAGE_INTERVAL := 1.5
+## Sağ çubuk bu kadar itilince nişan çubuktan alınır
+const AIM_STICK_THRESHOLD := 0.35
+## Düşman çarpışma katmanı (3. katman). Dash sırasında maskeden çıkarılır: düşmanların içinden geçilir.
+const ENEMY_LAYER := 4
+## Dash bir düşmanın içinde biterse en fazla bu kadar saniye daha kayarak dışarı çıkar
+const DASH_EXIT_TIME := 0.25
+## Nişanın ölçüldüğü nokta: karakterin gövdesi (ayak değil)
+const AIM_ORIGIN_OFFSET := Vector2(0, -8)
 const SHIELD_ICON := preload("res://addons/pixel_ui_fantasy/icons/shield.png")
 
 @export var move_speed: float = 120.0
@@ -55,10 +63,12 @@ const SHIELD_ICON := preload("res://addons/pixel_ui_fantasy/icons/shield.png")
 var state: State = State.NORMAL
 ## Görselin baktığı yön: "right" ya da "left". Yalnızca yatay girdiyle değişir.
 var facing: String = "right"
-## Saldırının ve yuvarlanmanın yöneldiği yön: son hareket yönü (çapraz ve dikey dahil)
+## Son nişan yönü (saldırı, ileride ok ve büyüler). Güncel değer için get_aim_direction() kullan.
 var aim_direction: Vector2 = Vector2.RIGHT
-## Yeteneğin tekrar kullanılabilmesine kalan süre
-var skill_cooldown_left: float = 0.0
+## Son hareket yönü; yuvarlanma bu yöne gider (Hades'teki gibi)
+var move_direction: Vector2 = Vector2.RIGHT
+## Yeteneklerin tekrar kullanılabilmesine kalan süre: yetenek id'si -> saniye
+var skill_cooldowns := {}
 ## Yakındaki etkileşilebilir nesne (NPC vb.); yoksa null
 var current_interactable: Interactable = null
 var _hit_done := false
@@ -69,7 +79,9 @@ var _block_started_at := -10.0
 var _state_timer := 0.0
 var _invulnerable_time := 0.0
 var _afterimage_timer := 0.0
+var _dash_exit_time := 0.0
 var _shield_icon: Sprite2D
+var _aim_marker: AimMarker
 # Harita değişiminden sonra çarpışmanın kapalı kalacağı fizik karesi sayısı
 var _spawn_guard := 0
 
@@ -90,6 +102,8 @@ func _ready() -> void:
 	_shield_icon.position = Vector2(0, -34)
 	_shield_icon.visible = false
 	add_child(_shield_icon)
+	_aim_marker = AimMarker.new()
+	add_child(_aim_marker)
 
 
 func _process(delta: float) -> void:
@@ -106,15 +120,17 @@ func _physics_process(delta: float) -> void:
 		_spawn_guard -= 1
 		if _spawn_guard == 0 and state != State.DEAD:
 			collision.disabled = false
-	skill_cooldown_left = maxf(0.0, skill_cooldown_left - delta)
+	for id: String in skill_cooldowns:
+		skill_cooldowns[id] = maxf(0.0, skill_cooldowns[id] - delta)
 	_no_resource_timer = maxf(0.0, _no_resource_timer - delta)
 	_invulnerable_time = maxf(0.0, _invulnerable_time - delta)
 	_update_interactable()
 	if state != State.DEAD:
-		if Input.is_action_just_pressed("use_potion"):
-			_use_health_potion()
-		if Input.is_action_just_pressed("use_mana_potion"):
-			_use_mana_potion()
+		if Input.is_action_just_pressed("swap_weapons"):
+			GameState.swap_weapon_set()
+		for i in GameState.QUICK_SLOT_COUNT:
+			if Input.is_action_just_pressed("quick_slot_%d" % (i + 1)):
+				_use_consumable(GameState.quick_slots[i])
 
 	match state:
 		State.NORMAL:
@@ -136,7 +152,7 @@ func _physics_process(delta: float) -> void:
 func _read_input() -> Vector2:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if input != Vector2.ZERO:
-		aim_direction = input.normalized()
+		move_direction = input.normalized()
 	# Sağ ya da sol girdisi varsa (yukarı/aşağı ile birlikte olsa bile) hemen o yöne dön
 	if input.x > TURN_THRESHOLD:
 		facing = "right"
@@ -153,20 +169,54 @@ func _process_normal() -> void:
 	if Input.is_action_pressed("block"):
 		_start_block()
 		return
-	if Input.is_action_just_pressed("skill") and _try_start_skill():
-		return
+	for i in GameState.SKILL_SLOT_COUNT:
+		if Input.is_action_just_pressed("skill_%d" % (i + 1)) and _try_use_skill(GameState.skill_slots[i]):
+			return
 	# Yakında NPC varsa etkileşim tuşu konuşmayı başlatır
 	if current_interactable and Input.is_action_just_pressed("interact"):
 		velocity = Vector2.ZERO
 		current_interactable.interact(self)
 		return
-	# Basılı tutulduğu sürece saldırmaya devam eder
-	if Input.is_action_pressed("attack"):
+	# Basılı tutulduğu sürece saldırmaya devam eder (fare bir arayüz butonunun üstündeyse saldırmaz)
+	if Input.is_action_pressed("attack") and not _pointer_over_ui():
 		_start_attack()
 		return
 
 	velocity = input * move_speed
 	sprite.play_directional("walk" if input != Vector2.ZERO else "idle", facing)
+
+
+# --- Nişan ------------------------------------------------------------------
+
+## Nişan yönü; saldırı (ve ileride ok, büyü) bunu kullanır. Fareyle oynanıyorsa karakterden imlece.
+## Gamepad'de sağ çubuğun yönü; çubuk bırakılmışsa hareket yönü, o da yoksa son nişan yönü.
+func get_aim_direction() -> Vector2:
+	if Controls.using_gamepad:
+		var stick := Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+		if stick.length() > AIM_STICK_THRESHOLD:
+			aim_direction = stick.normalized()
+		else:
+			var move := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+			if move != Vector2.ZERO:
+				aim_direction = move.normalized()
+	else:
+		var to_mouse := get_global_mouse_position() - (global_position + AIM_ORIGIN_OFFSET)
+		if to_mouse.length() > 2.0:
+			aim_direction = to_mouse.normalized()
+	return aim_direction
+
+
+## Görseli nişanın olduğu yana çevirir (yalnızca sağ/sol görsel var)
+func _face(direction: Vector2) -> void:
+	if direction.x > TURN_THRESHOLD:
+		facing = "right"
+	elif direction.x < -TURN_THRESHOLD:
+		facing = "left"
+
+
+# Fare bir arayüz öğesinin (ör. çanta butonu) üstündeyse sol tık saldırı sayılmaz
+func _pointer_over_ui() -> bool:
+	return not Controls.using_gamepad and get_viewport().gui_get_hovered_control() != null
 
 
 # --- Saldırı ----------------------------------------------------------------
@@ -175,7 +225,9 @@ func _start_attack() -> void:
 	_set_state(State.ATTACK)
 	_hit_done = false
 	velocity = Vector2.ZERO
-	attack_area.position = aim_direction * attack_reach + Vector2(0, -8)
+	var aim := get_aim_direction()
+	_face(aim)
+	attack_area.position = aim * attack_reach + AIM_ORIGIN_OFFSET
 	sprite.play_directional("attack", facing, true)
 	Audio.play_sfx("swing")
 	if not sprite.has_directional("attack"):
@@ -193,17 +245,52 @@ func _deal_attack_damage() -> void:
 			Audio.play_sfx("crit" if hit["crit"] else "hit")
 
 
-func _try_start_skill() -> bool:
-	if skill_cooldown_left > 0.0:
+## Yeteneğin mana bedeli (HUD'daki yetenek çubuğu da gösterir).
+func get_skill_mana_cost(id: String) -> int:
+	match id:
+		"ground_slam":
+			return skill_mana_cost
+	return 0
+
+
+## Yeteneğin toplam bekleme süresi.
+func get_skill_cooldown_duration(id: String) -> float:
+	match id:
+		"ground_slam":
+			return skill_cooldown
+	return 0.0
+
+
+## Yeteneğin tekrar kullanılabilmesine kalan süre.
+func get_skill_cooldown(id: String) -> float:
+	return skill_cooldowns.get(id, 0.0)
+
+
+# Yuvadaki yeteneği kullanmayı dener (boş yuva ya da bekleme süresi dolmamışsa false)
+func _try_use_skill(id: String) -> bool:
+	if id.is_empty() or get_skill_cooldown(id) > 0.0:
 		return false
+	match id:
+		"ground_slam":
+			return _try_start_ground_slam()
+	push_warning("Player: bilinmeyen yetenek %s" % id)
+	return false
+
+
+func _start_skill_cooldown(id: String, duration: float) -> void:
+	skill_cooldowns[id] = duration
+	GameState.skill_cooldown_started.emit(id, duration)
+
+
+# Yer Sarsıntısı: kılıcı yere saplayıp çevredeki bütün düşmanlara vurur
+func _try_start_ground_slam() -> bool:
 	if not GameState.spend_mana(skill_mana_cost):
 		_warn("MSG_NO_MANA", GameState.MANA_COLOR)
 		return false
 	_set_state(State.SKILL)
 	_hit_done = false
 	velocity = Vector2.ZERO
-	skill_cooldown_left = skill_cooldown
-	GameState.skill_cooldown_started.emit(skill_cooldown)
+	_start_skill_cooldown("ground_slam", skill_cooldown)
 	sprite.play_directional("special", facing, true)
 	if not sprite.has_directional("special"):
 		_deal_skill_damage()
@@ -230,6 +317,7 @@ func _deal_skill_damage() -> void:
 func _start_block() -> void:
 	_set_state(State.BLOCK)
 	_block_started_at = _now()
+	_face(get_aim_direction())
 	_shield_icon.visible = true
 	sprite.modulate = Color(0.75, 0.85, 1.0)
 	sprite.play_directional("block" if sprite.has_directional("block") else "idle", facing)
@@ -253,8 +341,11 @@ func _try_start_dodge() -> bool:
 		return false
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var direction := input.normalized() if input != Vector2.ZERO else (Vector2.RIGHT if facing == "right" else Vector2.LEFT)
-	aim_direction = direction
+	move_direction = direction
 	_set_state(State.DODGE)
+	# Dash/yuvarlanma sırasında düşmanların (boss'lar dahil) içinden geçilir; duvarlardan geçilmez
+	collision_mask &= ~ENEMY_LAYER
+	_dash_exit_time = 0.0
 	_state_timer = dodge_time
 	_invulnerable_time = dodge_invulnerable_time
 	velocity = direction * dodge_speed
@@ -270,9 +361,24 @@ func _process_dodge(delta: float) -> void:
 	if _afterimage_timer <= 0.0:
 		_afterimage_timer = 0.05
 		Afterimage.spawn_from(sprite, get_parent())
-	velocity = aim_direction * dodge_speed * clampf(_state_timer / dodge_time + 0.3, 0.3, 1.0)
+	velocity = move_direction * dodge_speed * clampf(_state_timer / dodge_time + 0.3, 0.3, 1.0)
 	if _state_timer <= 0.0:
+		# Bir düşmanın içinde bittiyse biraz daha kayarak arkasına çık
+		if _dash_exit_time < DASH_EXIT_TIME and _overlapping_enemy():
+			_dash_exit_time += delta
+			velocity = move_direction * dodge_speed * 0.5
+			return
 		_set_state(State.NORMAL)
+
+
+# Oyuncunun gövdesi şu an bir düşmanın gövdesiyle iç içe mi
+func _overlapping_enemy() -> bool:
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = collision.shape
+	query.transform = collision.global_transform
+	query.collision_mask = ENEMY_LAYER
+	query.exclude = [get_rid()]
+	return not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 func is_invulnerable() -> bool:
@@ -364,7 +470,7 @@ func prepare_for_map_change() -> void:
 func revive() -> void:
 	_set_state(State.NORMAL)
 	modulate = Color.WHITE
-	skill_cooldown_left = 0.0
+	skill_cooldowns.clear()
 	collision.set_deferred("disabled", false)
 	sprite.play_directional("idle", facing, true)
 
@@ -383,6 +489,7 @@ func _set_state(new_state: State) -> void:
 		sprite.modulate = Color.WHITE
 	if state == State.DODGE and new_state != State.DODGE:
 		sprite.speed_scale = 1.0
+		collision_mask |= ENEMY_LAYER
 	state = new_state
 
 
@@ -407,6 +514,15 @@ func _warn(key: String, color: Color) -> void:
 	if _no_resource_timer <= 0.0:
 		GameState.message.emit(tr(key), color)
 		_no_resource_timer = NO_RESOURCE_MESSAGE_INTERVAL
+
+
+# Hızlı kullanım yuvasındaki eşyayı kullanır
+func _use_consumable(id: String) -> void:
+	match id:
+		"health_potion":
+			_use_health_potion()
+		"mana_potion":
+			_use_mana_potion()
 
 
 func _use_health_potion() -> void:

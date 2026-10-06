@@ -2,9 +2,14 @@ class_name DialogueBox
 extends PanelContainer
 ## Ekranın altında beliren konuşma kutusu. Dialogue servisinin dialogue_started sinyalini dinler.
 ## Metin harf harf yazılır; dokunuş önce metni tamamlar, sonra sonraki satıra geçer.
-## Konuşma sürerken oyun duraklar.
+## Konuşma sürerken oyun duraklar. Sağda konuşanın portresi (Stardew Valley gibi):
+## res://assets/portraits/<konuşmacı id>.png (ör. ezra.png, player.png); yoksa yer tutucu.
+## Portreler 64x64 önerilir (daha büyükse oranı korunarak küçültülür); saydam PNG olabilir,
+## arkada çerçevenin zemini görünür.
 
 const CHARS_PER_SECOND := 45.0
+const PORTRAIT_FOLDER := "res://assets/portraits/"
+const PORTRAIT_PLACEHOLDER := "res://assets/portraits/placeholder.png"
 
 var _lines: Array = []
 var _index := 0
@@ -15,6 +20,7 @@ var _input_lock := 0.0
 @onready var speaker_label: Label = %Speaker
 @onready var text_label: Label = %Text
 @onready var hint_label: Label = %Hint
+@onready var portrait: TextureRect = %Portrait
 
 
 func _ready() -> void:
@@ -49,11 +55,20 @@ func _on_dialogue_started(_npc_id: String, _dialogue_id: String, lines: Array) -
 func _show_line() -> void:
 	var line: Array = _lines[_index]
 	speaker_label.text = Dialogue.get_npc_name(str(line[0]))
+	portrait.texture = get_portrait(str(line[0]))
 	text_label.text = tr(str(line[1]))
 	text_label.visible_ratio = 0.0
 	_typing = true
 	Audio.play_sfx("dialogue", 0.1)
 	hint_label.hide()
+
+
+## Konuşmacının portresi; dosyası yoksa yer tutucu.
+static func get_portrait(speaker_id: String) -> Texture2D:
+	var path := PORTRAIT_FOLDER + speaker_id + ".png"
+	if not ResourceLoader.exists(path):
+		path = PORTRAIT_PLACEHOLDER
+	return load(path) if ResourceLoader.exists(path) else null
 
 
 func _advance() -> void:

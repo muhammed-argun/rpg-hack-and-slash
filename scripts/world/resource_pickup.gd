@@ -38,6 +38,10 @@ func _update_visibility() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _collected or not visible or not body is Player:
 		return
+	# Çanta doluysa toplanmaz; oyuncu yer açıp tekrar gelebilir
+	if not GameState.bag_has_room_for(BagStack.of_id(material_id, amount)):
+		GameState.message.emit(tr("MSG_BAG_FULL"), Color(1, 0.6, 0.4))
+		return
 	_collected = true
 	set_deferred("monitoring", false)
 	GameState.add_material(material_id, amount)

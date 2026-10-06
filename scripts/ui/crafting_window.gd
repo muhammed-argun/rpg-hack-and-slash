@@ -12,6 +12,8 @@ var _list: VBoxContainer
 
 
 func _ready() -> void:
+	# Gamepad ile açılınca ilk butonu odaklansın (Controls.focus_top_menu)
+	add_to_group("menus")
 	theme_type_variation = &"WindowPanel"
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 	recipes = parsed if parsed is Dictionary else {}
@@ -57,13 +59,18 @@ func craft(recipe_id: String) -> bool:
 	var recipe: Dictionary = recipes.get(recipe_id, {})
 	var cost: Dictionary = recipe.get("cost", {})
 	var gold_cost: int = int(recipe.get("gold", 0))
+	var gives: Dictionary = recipe.get("gives", {})
+	# Ürün çantaya sığmıyorsa malzeme harcanmasın
+	for key: String in ["health_potions", "mana_potions"]:
+		if gives.has(key) and not GameState.bag_has_room_for(BagStack.of_id(key.trim_suffix("s"), 1)):
+			GameState.message.emit(tr("MSG_BAG_FULL"), Color(1, 0.5, 0.4))
+			return false
 	if GameState.gold < gold_cost or not GameState.spend_materials(cost):
 		GameState.message.emit(tr("MSG_NOT_ENOUGH"), Color(1, 0.5, 0.4))
 		return false
 	if gold_cost > 0:
 		GameState.gold -= gold_cost
 		GameState.gold_changed.emit(GameState.gold)
-	var gives: Dictionary = recipe.get("gives", {})
 	if gives.has("health_potions"):
 		GameState.add_health_potions(int(gives["health_potions"]), false)
 	if gives.has("mana_potions"):

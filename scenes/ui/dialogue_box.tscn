@@ -7,28 +7,34 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 40.0
-offset_top = -84.0
-offset_right = -40.0
+offset_left = 30.0
+offset_top = -104.0
+offset_right = -30.0
 offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_type_variation = &"ParchmentPanel"
 script = ExtResource("1_box")
 
-[node name="Box" type="VBoxContainer" parent="."]
+[node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Box" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="Speaker" type="Label" parent="Box"]
+[node name="Speaker" type="Label" parent="Row/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 theme_type_variation = &"Nameplate"
 text = "NPC"
 
-[node name="Text" type="Label" parent="Box"]
+[node name="Text" type="Label" parent="Row/Box"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
@@ -37,10 +43,25 @@ theme_type_variation = &"Ink"
 text = "..."
 autowrap_mode = 3
 
-[node name="Hint" type="Label" parent="Box"]
+[node name="Hint" type="Label" parent="Row/Box"]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0.6)
 layout_mode = 2
 theme_type_variation = &"Ink"
 text = "UI_TAP_TO_CONTINUE"
 horizontal_alignment = 2
+
+[node name="PortraitFrame" type="PanelContainer" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"PortraitPanel"
+
+[node name="Portrait" type="TextureRect" parent="Row/PortraitFrame"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

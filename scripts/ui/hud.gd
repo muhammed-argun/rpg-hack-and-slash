@@ -8,7 +8,7 @@ signal save_requested
 
 const MESSAGE_LIFETIME := 2.5
 const MAX_MESSAGES := 4
-const HELD_ACTIONS := ["move_left", "move_right", "move_up", "move_down", "attack", "interact", "skill", "block", "dodge"]
+const HELD_ACTIONS := ["move_left", "move_right", "move_up", "move_down", "attack", "interact", "skill_1", "skill_2", "skill_3", "block", "dodge"]
 ## Etkileşim ipucunun nesnenin kökünden yukarı uzaklığı (NPC adı ve görev işaretinin üstü)
 const PROMPT_OFFSET_Y := -76.0
 
@@ -26,6 +26,7 @@ const PROMPT_OFFSET_Y := -76.0
 @onready var boss_health: PixelBar = %BossHealth
 @onready var boss_name: Label = %BossName
 @onready var gold_label: Label = %GoldLabel
+@onready var purse: PanelContainer = %Purse
 @onready var messages: VBoxContainer = %Messages
 @onready var map_name: Label = %MapName
 @onready var interact_prompt: Label = %InteractPrompt
@@ -45,6 +46,8 @@ var _story: StoryCard
 var _player_connected := false
 var _windows_open := false
 var _prompt_target: Interactable
+var _hotbar: Hotbar
+var _quests: QuestWindow
 
 
 func _ready() -> void:
@@ -63,6 +66,8 @@ func _ready() -> void:
 	Quests.quest_completed.connect(_refresh_quest_tracker.unbind(1))
 	Settings.changed.connect(_refresh_quest_tracker)
 	Settings.changed.connect(_refresh_interact_prompt)
+	Controls.device_changed.connect(_refresh_interact_prompt.unbind(1))
+	Controls.bindings_changed.connect(_refresh_interact_prompt)
 	Dialogue.dialogue_started.connect(_on_window_opened.unbind(3))
 	Dialogue.dialogue_finished.connect(_on_window_closed.unbind(2))
 	Dialogue.window_requested.connect(_on_window_requested)
@@ -81,6 +86,13 @@ func _ready() -> void:
 	_story = StoryCard.new()
 	$Root.add_child(_story)
 	_story.finished.connect(_on_window_closed)
+	_quests = QuestWindow.new()
+	$Root.add_child(_quests)
+	$Root.move_child(_quests, inventory.get_index() + 1)
+	_quests.closed.connect(_on_window_closed)
+	_hotbar = Hotbar.new()
+	$Root.add_child(_hotbar)
+	$Root.move_child(_hotbar, interact_prompt.get_index())
 	var hints := TutorialHints.new()
 	$Root.add_child(hints)
 	$Root.move_child(hints, interact_prompt.get_index())
@@ -92,18 +104,39 @@ func _ready() -> void:
 	_refresh_quest_tracker()
 	for bar: PixelBar in [hp_bar, mp_bar, stamina_bar]:
 		bar.settle()
+	_fit_purse()
 
 
 func _process(_delta: float) -> void:
 	_connect_player()
 	_update_interact_prompt()
-	if Input.is_action_just_pressed("toggle_inventory"):
+	if Controls.capturing:
+		return
+	if Input.is_action_just_pressed("toggle_inventory") or Input.is_action_just_pressed("toggle_character"):
 		_toggle_inventory()
-	if Input.is_action_just_pressed("pause") and not dialogue_box.visible:
+	if Input.is_action_just_pressed("toggle_quests"):
+		_toggle_quests()
+	# Esc hem "pause" hem "ui_cancel"; gamepad'de Start "pause", B "ui_cancel"
+	var pause := Input.is_action_just_pressed("pause")
+	var back := Input.is_action_just_pressed("ui_cancel")
+	if (pause or back) and not dialogue_box.visible:
 		if pause_menu.visible:
-			pause_menu.resume()
-		elif not _is_busy_except(pause_menu):
+			pause_menu.go_back()
+		elif back and _close_top_window():
+			pass
+		elif pause and not _is_busy_except(pause_menu):
 			open_pause_menu()
+
+
+# Altın kesesi duraklat butonuyla aynı yükseklikte olsun (24 px): panelin iç boşluğu küçültülür,
+# yoksa kese uzayıp alttaki görev butonunun üstüne biniyor
+func _fit_purse() -> void:
+	var style := purse.get_theme_stylebox("panel").duplicate() as StyleBox
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	style.content_margin_left = 5
+	style.content_margin_right = 6
+	purse.add_theme_stylebox_override("panel", style)
 
 
 func open_pause_menu() -> void:
@@ -130,8 +163,18 @@ func show_map_name(key: String) -> void:
 
 
 func _is_busy_except(window: Control) -> bool:
-	for other: Control in [inventory, crafting, shop, smith, dialogue_box, pause_menu]:
+	for other: Control in [inventory, _quests, crafting, shop, smith, dialogue_box, pause_menu]:
 		if other != window and other.visible:
+			return true
+	return false
+
+
+# Açık olan oyun penceresini kapatır (geri tuşu). Bir pencere kapandıysa true döner.
+func _close_top_window() -> bool:
+	for window: Control in [smith, shop, crafting, inventory, _quests]:
+		if window.visible:
+			# Envanter ve dükkânda önce split penceresi kapanır
+			window.call("go_back" if window.has_method("go_back") else "close")
 			return true
 	return false
 
@@ -150,7 +193,17 @@ func _open_quests() -> void:
 	if _is_busy_except(null):
 		return
 	_on_window_opened()
-	inventory.open(InventoryWindow.TAB_QUESTS)
+	_quests.open()
+
+
+func _toggle_quests() -> void:
+	if _is_busy_except(_quests):
+		return
+	if _quests.visible:
+		_quests.close()
+	else:
+		_on_window_opened()
+		_quests.open()
 
 
 func _on_window_requested(window_name: String) -> void:
@@ -187,6 +240,7 @@ func _connect_player() -> void:
 	if player:
 		player.interactable_changed.connect(_on_interactable_changed)
 		_player_connected = true
+		_hotbar.refresh()
 
 
 func _on_interactable_changed(interactable: Interactable) -> void:
@@ -198,7 +252,7 @@ func _on_interactable_changed(interactable: Interactable) -> void:
 func _refresh_interact_prompt() -> void:
 	if _prompt_target == null:
 		return
-	interact_prompt.text = "[%s] %s" % [Settings.get_action_key_label("interact"), tr(_prompt_target.prompt_key)]
+	interact_prompt.text = "[%s] %s" % [Controls.get_action_label("interact"), tr(_prompt_target.prompt_key)]
 	interact_prompt.reset_size()
 
 

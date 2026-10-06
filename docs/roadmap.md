@@ -77,15 +77,15 @@ Oyunun açılışında malzeme toplamak tempoyu düşürür; oyuncu ilk dakikala
 
 ## Aşamalar
 
-### Aşama 0: PC'ye geçiş (ŞU ANKİ İŞ)
+### Aşama 0: PC'ye geçiş ✅ (2026-10-06)
 Ayrıntılı iş listesi: `handoff.md` 3. bölüm.
 - [x] Ekrandaki dokunmatik kontrolleri kaldır (kodu mobil port için sakla), fare ile dokunma taklidini kapat
-- [ ] Ayarlara tuş atama ekranı (klavye/fare + gamepad), atamaların kaydı
-- [ ] Hades tarzı nişan: WASD ile hareket, imlece (gamepad'de sağ çubuğa) doğru saldırı, özel imleç
-- [ ] Yetenek yuvaları E/R/T, hızlı kullanım yuvaları 1/2 (ayrı etkileşim tuşu F yapıldı)
-- [ ] Birleşik envanter + karakter penceresi (I/C): 36 yuvalı çanta, ekipman yuvaları, iki silah seti, sadak, özellikler, XP barı
-- [ ] Yeni XP formülü (1,6 kat, 100'e yukarı yuvarlama), seviye atlayınca özellik puanı
-- [ ] Tam ekran/çözünürlük/V-Sync ayarları; Windows ve Linux (Steam Deck) dışa aktarma ayarları
+- [x] Ayarlara tuş atama ekranı (klavye/fare + gamepad), atamaların kaydı
+- [x] Hades tarzı nişan: WASD ile hareket, imlece (gamepad'de sağ çubuğa) doğru saldırı, özel imleç
+- [x] Yetenek yuvaları E/R/T, hızlı kullanım yuvaları 1/2, ayrı etkileşim tuşu F
+- [x] Birleşik envanter + karakter penceresi (I/C): 36 yuvalı çanta, ekipman yuvaları, iki silah seti, sadak, özellikler, XP barı
+- [x] Yeni XP formülü (1,6 kat, 100'e yukarı yuvarlama), seviye atlayınca özellik puanı
+- [x] Tam ekran/çözünürlük/V-Sync ayarları; Windows ve Linux (Steam Deck) dışa aktarma ayarları
 - [x] Öğretici ipuçlarını PC kontrollerine göre yeniden yaz (tuş adları ayarlardaki atamadan okunuyor)
 
 ### Aşama 1: Dikey dilim

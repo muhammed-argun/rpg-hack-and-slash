@@ -1,3 +1,5 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Dışa aktarılan oyun (export_presets.cfg -> build/)
+/build/

@@ -1,14 +1,14 @@
 # Devir Notu (Handoff)
 
-Son güncelleme: 2026-10-06. Bu dosya yeni bir Claude oturumunun **ilk okuyacağı** dosyadır. Projenin şu anki durumunu ve sıradaki işleri anlatır. İş bitince bu dosyayı güncel tut.
+Son güncelleme: 2026-10-06. Bu dosya yeni bir Claude oturumunun **ilk okuyacağı** dosyadır. İşleri ajanlara dağıtma kuralları: `docs/agents.md`. Projenin şu anki durumunu ve sıradaki işleri anlatır. İş bitince bu dosyayı güncel tut.
 
 ## 1. Kısa geçmiş
 1. Proje **mobil (Android)** hack and slash olarak başladı. Dokunmatik joystick ve ekran butonlarıyla oynanabilir bir dikey dilim yapıldı.
 2. 2026-10-06 gecesi, kullanıcı yokken büyük bir otonom çalışmayla çekirdek sistemlerin hepsi eklendi (aşağıdaki tablo). Kullanıcı bunları push'ladı.
-3. Aynı gün kullanıcı **PC'ye geçme** kararı aldı: Steam Deck destekli, gamepad ile de oynanabilir. Mobil port ileride yapılabilir. İş listesi 3. bölümde. **3.1 bitti** (dokunmatik kontroller kaldırıldı, F ile konuşma); sıradaki 3.2.
+3. Aynı gün kullanıcı **PC'ye geçme** kararı aldı: Steam Deck destekli, gamepad ile de oynanabilir. Mobil port ileride yapılabilir. İş listesi 3. bölümde. **3.1–3.7 hepsi bitti** (2026-10-06). Kullanıcının onayı beklenen varsayılanlar 4. bölümün başında.
 
 ## 2. Şu an oyunda çalışanlar
-Hepsi otomatik testlerle doğrulandı (duman testi: 73 kontrol; boss testi: 10 boss).
+Hepsi otomatik testlerle doğrulandı (duman testi: 150 kontrol; boss testi: 10 boss + Malphas).
 
 | Sistem | Durum | Nerede |
 |---|---|---|
@@ -26,9 +26,9 @@ Hepsi otomatik testlerle doğrulandı (duman testi: 73 kontrol; boss testi: 10 b
 | HUD: can/mana/stamina, seviye/XP, görev takibi, boss barı, mesajlar | ✅ | `scenes/ui/hud.tscn`, `scripts/ui/hud.gd` |
 | Dokunmatik kontroller (joystick, ekran butonları) | ⏸ HUD'dan kaldırıldı, kod mobil port için saklı | `touch_joystick.gd`, `action_button.gd` |
 
-### Şu anki kontroller (değişecek, bkz. 3. bölüm)
-WASD hareket · Space/J saldırı · **F konuş** · L blok/parry · Shift yuvarlanma · K yetenek · Q can iksiri · E mana iksiri · I/Tab envanter · Esc/P duraklat. Sağ üstteki duraklat/çanta/görev butonlarına fareyle tıklanabilir.
-Henüz gamepad tuşu atanmadı (3.2/3.3).
+### Şu anki kontroller (ayarlardan değiştirilebilir)
+Klavye/fare: WASD hareket · Sol tık saldırı · Sağ tık blok/parry · Space yuvarlanma · F konuş · E/R/T yetenekler · 1/2 hızlı kullanım (can/mana iksiri) · Q silah seti · I/C karakter ve çanta · J görevler · Esc duraklat/geri.
+Gamepad (Xbox / Steam Deck): Sol çubuk hareket · Sağ çubuk nişan · X saldırı · LT blok · A yuvarlanma · Y konuş · RB/RT/B yetenekler · Yön sol/sağ hızlı kullanım · LB silah seti · Back envanter · Yön yukarı karakter · Yön aşağı görevler · Start duraklat · B geri.
 Saldırı, karakterin son hareket yönüne (`aim_direction`) gidiyor; görsel yalnızca sağa/sola bakıyor.
 
 ## 3. SIRADAKİ İŞ: PC'ye geçiş (kullanıcının istekleri)
@@ -36,7 +36,7 @@ Kullanıcı bunları açıkça istedi. Sırayla yap; her adımdan sonra duman te
 
 ### 3.1 Ekrandaki dokunmatik kontrolleri kaldır ✅ (2026-10-06)
 Yapılanlar (ayrıntı: `decisions.md`): joystick ve aksiyon butonları HUD'dan çıktı; duraklat/çanta/görev normal `Button`; `emulate_touch_from_mouse=false`; yeni `interact` aksiyonu (F) ve NPC üstünde `[F] Konuş`; `HINT_*` ve `UI_TAP_*` metinleri PC'ye göre, tuş adları `Settings.format_action_keys()` ile atamadan okunuyor. Duman testine 3 kontrol eklendi.
-**Geçici eksik:** iksir sayısı ve yetenek bekleme süresi HUD'da görünmüyor; 3.4'te yetenek çubuğu ve hızlı kullanım yuvalarıyla gelecek.
+(Geçici eksik olan iksir sayısı ve bekleme süresi 3.4'te `Hotbar` ile geri geldi.)
 
 Aşağıdaki madde listesi orijinal istek (kayıt için duruyor):
 - HUD'dan joystick ve aksiyon butonlarını (saldırı, yetenek, blok, yuvarlanma, iksirler) **kaldır**.
@@ -45,13 +45,16 @@ Aşağıdaki madde listesi orijinal istek (kayıt için duruyor):
 - Saldırı butonunun üstündeki "Konuş" balonu (`InteractPrompt`) yerine NPC'nin üstünde tuş ipucu gösterilebilir (ör. "[F] Konuş"). Etkileşim tuşu ayrı bir aksiyon olmalı (`interact`, varsayılan **F**), çünkü sol tık artık saldırı.
 - Öğretici ipuçlarının metinleri (`HINT_*`, `ui.csv`) dokunmatiğe göre yazıldı ("joystick ile yürü"). PC'ye göre yeniden yazılmalı.
 
-### 3.2 Ayarlara tuş atama ekranı
+### 3.2 Ayarlara tuş atama ekranı ✅ (2026-10-06)
+Yapılanlar: yeni autoload `Controls` (`scripts/autoload/controls.gd`). Varsayılan tuşlar (klavye/fare + gamepad) `Controls.DEFAULTS`'ta; **project.godot'ta artık aksiyon tanımı yok**. Ayarlar > Kontroller penceresi (`controls_window.gd`): tıkla, yeni tuşa bas; çakışan tuş eski aksiyondan kalkar ve yazılır; Esc ya da 5 sn iptal; "Varsayılana Dön". Kayıt `settings.cfg` [controls]. Son kullanılan cihaz (`Controls.using_gamepad`) izleniyor; ipuçları gamepad'de gamepad tuşunu gösteriyor. Gamepad ile menülerde odak: `menus` grubundaki görünür son pencerenin ilk butonu otomatik seçilir. Esc / gamepad B: açık pencereyi kapatır, alt menüden üst menüye döner.
+Aksiyonlar son haline getirildi (3.4 ile uyumlu): `skill_1/2/3` (E/R/T), `quick_slot_1/2` (1/2), `toggle_character` (C), saldırı sol tık, blok sağ tık, yuvarlanma Space. Şimdilik `quick_slot_1` = can iksiri, `quick_slot_2` = mana iksiri; `skill_2/3` boş.
 - Ayarlar penceresine (`settings_window.gd`) "Kontroller" bölümü: her aksiyon için klavye/fare ve gamepad tuşu gösterilsin, tıklayıp yeni tuşa basınca değişsin, "Varsayılana dön" butonu olsun.
 - Atamalar `user://settings.cfg` dosyasına kaydedilip açılışta `InputMap`'e uygulanmalı (`Settings` autoload).
 - Aynı tuş iki aksiyona atanırsa uyar ya da eskisini boşalt.
 - Gamepad ile menülerde gezinebilmek için Control'lerde odak (focus) düzgün çalışmalı (Steam Deck).
 
-### 3.3 Hades tarzı savaş: WASD ile yürü, imleç yönüne saldır
+### 3.3 Hades tarzı savaş: WASD ile yürü, imleç yönüne saldır ✅ (2026-10-06)
+Yapılanlar: `Player.get_aim_direction()` tek nişan kaynağı (fare: karakterden imlece; gamepad: sağ çubuk, bırakılınca hareket yönü, o da yoksa son nişan). Saldırı ve blok nişan tarafına döner; yuvarlanma `move_direction`'a gider. Fare bir HUD butonunun üstündeyken sol tık saldırmaz. Gamepad'de ayağın çevresinde küçük nişan oku (`AimMarker`), fare imleci gizlenir; fare oynayınca geri gelir. Özel imleç `Controls._update_cursor()`: pencere ölçeğine göre 1x-4x. Gamepad'e özel ipucu metinleri `HINT_*_PAD`.
 - Hareket WASD ile (değişmiyor).
 - **Saldırı imlecin (fare) gösterdiği yöne:** saldırı alanı `player → imleç` yönünde konumlanır. Karakter görseli imlecin bulunduğu yana (sağ/sol) döner ve saldırı animasyonu oynar.
 - Mevcut kod: `Player.aim_direction` saldırı yönü, `Player.facing` ("right"/"left") görsel yön. Saldırıda `aim_direction` imleçten hesaplanmalı (`get_global_mouse_position()`).
@@ -60,13 +63,18 @@ Aşağıdaki madde listesi orijinal istek (kayıt için duruyor):
 - İleride menzilli silah, ok ve büyüler de bu nişanı kullanacak; o yüzden nişan yönü tek bir yerden okunmalı (ör. `Player.get_aim_direction()`).
 - **Özel imleç:** `addons/pixel_ui_fantasy/cursor.png` (ve `cursor_2x/3x/4x.png`). İmleç ekran ölçeğiyle büyümediği için pencere boyutuna uygun kopya seçilir (1440×810 için 3x). Hotspot sol üst piksel. Ayar: `display/mouse_cursor/custom_image` ya da `Input.set_custom_mouse_cursor()`.
 
-### 3.4 Yetenekler E, R, T; iksirler 1, 2
+### 3.4 Yetenekler E, R, T; iksirler 1, 2 ✅ (2026-10-06)
+Yapılanlar: `GameState.skill_slots` (varsayılan `["ground_slam", "", ""]`) ve `GameState.quick_slots` (`["health_potion", "mana_potion"]`), kayda yazılıyor. Yetenek tanımları `GameState.SKILLS` (ad, ikon); davranış, mana bedeli ve bekleme süresi `Player`'da (`_try_use_skill`, `get_skill_mana_cost`, `get_skill_cooldown_duration`). Her yeteneğin kendi bekleme süresi var. HUD'da alt ortada `Hotbar`: 3 yetenek + 2 hızlı kullanım yuvası, üstünde tuş adı, mana bedeli/iksir sayısı, bekleme karartması. Yuvaya eşya koyma: `GameState.set_quick_slot()`; aynı eşya diğer yuvadaysa yer değiştirirler. Envanterden yuva atama 3.5 penceresinde.
 - 3 aktif yetenek yuvası: varsayılan **E, R, T** (Dota gibi), ayarlardan değiştirilebilir. Şu an tek yetenek var (Yer Sarsıntısı) → E yuvasına. Diğer yuvalar boş görünür.
 - HUD'da yetenek çubuğu: 3 yuva (ikon + tuş harfi + bekleme süresi karartması + mana bedeli). Pixel UI Fantasy'deki `SkillSlot` varyasyonu ve `cooldown.png` kullanılabilir.
 - **Hızlı kullanım yuvaları 1 ve 2:** Envanterdeki (ya da bir "kuşak"taki) sıraya göre çalışır. 1. yuvada can iksiri varsa onu, mana iksiri varsa onu kullanır. İleride başka tüketilebilir eşyalar da buraya konabilir. Varsayılan: 1 = can iksiri, 2 = mana iksiri.
 - Bu yüzden şu anki `use_potion` (Q) ve `use_mana_potion` (E) aksiyonları `quick_slot_1` (1) ve `quick_slot_2` (2) olarak değişmeli. E artık yetenek tuşu.
 
-### 3.5 – 3.6 Envanter + Karakter penceresi (birleşik)
+### 3.5 – 3.6 Envanter + Karakter penceresi (birleşik) ✅ (2026-10-06)
+Yapılanlar: `InventoryWindow` baştan yazıldı (kodla kuruluyor, I ve C açar). Solda 36 yuvalı çanta, eşya bilgisi, Kullan/Kuşan/Çıkar ve "1"/"2" hızlı kullanım yuvasına koyma. Sağda seviye, can/mana, XP barı (üstüne gelince "350/1000"), 8 ekipman yuvası (kask, zırh, eldiven, ayakkabı | kolye, pelerin, yüzük, kemer), iki silah seti (I/II; çift elli silahta ikinci el kilitli; Q / gamepad LB ile set değişir), sadak (3 yuva), özellikler STR/AGI/INT/VIT (hepsi 10, etkisi yok) ve "+" ile puan dağıtma. Sağ tık hızlı eylem. Yuvalar buton: gamepad ile odaklanır.
+Veri: `GameState.equipment` (yuva -> ItemData), `active_weapon_set`, `attributes`, `attribute_points`, `BAG_SIZE`; eski kayıtlardaki `weapon`/`armor` yeni yuvalara taşınıyor. `ItemData` yeni türler (kask, eldiven, ayakkabı, pelerin, yüzük, kolye, kemer, kalkan, ok) ve `two_handed`/`ranged`; ikonlar `tools/generate_placeholders.gd` ile üretilen yer tutucular. Sandıklar artık her tür eşya düşürüyor. Çanta doluyken gelen eşya değerine satılıyor.
+XP: `GameState.xp_needed_for()` → 100, 200, 400, 700, 1200, 2000... Özellik puanı 3, 6, 9... seviyelerde.
+**Görevler ayrı pencereye taşındı:** `QuestWindow` (J, gamepad yön aşağı, HUD'daki "!" butonu).
 Kullanıcı ayrı bir karakter ekranı yerine **tek bir birleşik pencere** istiyor. **I** ve **C** aynı pencereyi açar.
 - **Sol taraf:** 6×6 = **36 yuvalı çanta**.
 - **Sağ taraf: karakter paneli**
@@ -83,13 +91,23 @@ Kullanıcı ayrı bir karakter ekranı yerine **tek bir birleşik pencere** isti
 - Mevcut envanter penceresi (`inventory_window.gd`): 12 yuva, "Çanta / Ekipman / Görevler" sekmeleri. Görevler sekmesi korunabilir ya da ayrı bir günlük olabilir; **kullanıcıya sor.**
 - Silah ve zırh eşyaları şu an düşmüyor (`Chest.LOOT_TYPES` sadece değerli eşya). Ekipman yuvaları eklenince eşya sistemi (`ItemData`) yuva türleriyle genişletilmeli.
 
-### 3.7 PC için diğer ayarlar
+### 3.7 PC için diğer ayarlar ✅ (2026-10-06)
+Yapılanlar: Ayarlar'a tam ekran, pencere boyutu (480x270'in tam katları, ekrana sığanlar) ve V-Sync (`Settings.fullscreen/window_scale/vsync`, [display] bölümü). Titreşim artık gamepad'i titreştiriyor (`Settings.vibrate`). `export_presets.cfg`: "Windows Desktop" (`build/windows/KulPrensi.exe`) ve "Linux (Steam Deck)" (`build/linux/KulPrensi.x86_64`), Android ile aynı `data/*.json` ve hariç tutma filtreleri; `/build/` git'e girmez. **Dışa aktarma şablonları bu bilgisayarda kurulu değil** (Editör > Dışa Aktarma Şablonlarını Yönet); bu yüzden gerçek bir dışa aktarma denenmedi.
 - Ayarlar: tam ekran / pencere, çözünürlük (tam sayı ölçek), V-Sync.
 - Dışa aktarma: Windows ve Linux (Steam Deck) ayarları `export_presets.cfg` dosyasına eklenmeli. Şu an sadece Android ayarı var (`data/*.json` include filtresiyle; aynı filtre PC ayarlarına da konmalı).
 - `docs/design.md` ve `docs/roadmap.md` dosyalarındaki mobil kısımlar PC'ye göre güncellendi; kod değiştikçe onları da güncel tut.
 
-## 4. Bekleyen diğer işler
-- **Asset paketleri:** `docs/downloads.md`. Kullanıcının indirip indirmediği bilinmiyor; **sor.** Zorunlu: Zerie Tiny RPG 01 + 02 tam sürümleri (toplam 5 dolar). Gelince yapılacaklar:
+## 3b. Kullanıcı geri bildirimiyle yapılanlar (2026-10-06) ✅
+Ana menü ortalama, envanterde sürükle-bırak + Split (kaydırıcı, imlece yapışan yığın), ikonların yuvaya ortalanması, eşya bilgisi kutusu (pencere büyümez), altın kesesi boyu, konuşmada sağda portre (yer tutucu), dükkânda solda çanta + satış + Split, dash ile düşmanların içinden geçme. Ayrıntı: `decisions.md`.
+**Kullanıcıdan beklenen:** NPC portre PNG'leri → `assets/portraits/<id>.png` (id'ler: ezra, mira, kadir, borak, rurik, seren, pip, player; 64x64 önerilir).
+
+## 4. Bekleyen diğer işler- **Kullanıcıya sorulacak (PC geçişinde varsayılan seçildi, kolayca değişir):**
+  - XP: 1→2 için **100**, çarpan 1,6 şimdilik kalsın (kullanıcı kararı). İleride öneri: çarpan 1,4 + '2 anlamlı basamağa' yuvarlama (100, 140, 200, 270...) ve mob XP'sini eğriye bağlamak: `mob_xp = gereken_xp(mob seviyesi) / seviye başına öldürme hedefi (ör. 25) × tür katsayısı`. Böylece çarpan değişse de grind miktarı değişmez. Eski formülde 40'tı; seviye atlamak artık daha yavaş. Düşman/boss XP ödülleri buna göre ayarlanabilir.
+  - Özellik puanı: kullanıcı **her seviyede 1** dedi (`GameState.LEVELS_PER_ATTRIBUTE_POINT = 1`); oyun uzunluğu belli olunca yeniden bakılacak.
+  - Görevler: envanterden çıkarılıp **ayrı görev günlüğü** yapıldı (J). Kullanıcı birleşik pencerede sekme isterse geri eklenebilir.
+  - Özelliklerin (STR/AGI/INT/VIT) etkileri henüz yok; ne yapacakları kararlaştırılmalı (`ATTR_*_DESC` metinlerinde öneri var).
+  - Ekipman ikonları yer tutucu; asset paketi gelince `ItemData.TYPE_ICONS` değiştirilecek.
+  - Menzilli silah (yay) ve ok takılabiliyor ama henüz ateş etmiyor.- **Asset paketleri:** `docs/downloads.md`. Kullanıcının indirip indirmediği bilinmiyor; **sor.** Zorunlu: Zerie Tiny RPG 01 + 02 tam sürümleri (toplam 5 dolar). Gelince yapılacaklar:
   - `tools/import_tiny_rpg_pack.gd` aracını yeni karakterler için genişlet.
   - Tileset'lerle şehir ve Kül Ormanı'nı yeniden kur.
   - NPC ve boss görsel klasörlerini değiştir.

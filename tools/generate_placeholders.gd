@@ -215,7 +215,101 @@ func _make_items() -> void:
 	_draw_circle(necklace, Vector2(16, 20), 3.0, Color(0.4, 0.8, 1.0))
 	_px(necklace, Vector2(15, 19), Color.WHITE)
 	_save_if_missing("res://assets/items/necklace.png", necklace)
+	_make_gear_icons()
+	_make_portrait()
 
+
+# Konuşma portresi yer tutucusu (64x64, saydam zemin): baş ve omuz silueti
+func _make_portrait() -> void:
+	var img := _new_image(64, 64)
+	var shade := Color(0.35, 0.28, 0.24)
+	_draw_circle(img, Vector2(32, 25), 13.0, OUTLINE)
+	_draw_circle(img, Vector2(32, 25), 12.0, shade)
+	for y in range(40, 64):
+		var half := 14 + (y - 40)
+		_rect(img, Rect2i(32 - half - 1, y, half * 2 + 2, 1), OUTLINE)
+		_rect(img, Rect2i(32 - half, y, half * 2, 1), shade.darkened(0.1))
+	_px(img, Vector2(27, 24), Color(0.9, 0.85, 0.75))
+	_px(img, Vector2(37, 24), Color(0.9, 0.85, 0.75))
+	_save_if_missing("res://assets/portraits/placeholder.png", img)
+
+
+# Ekipman ikonları (32x32, içerik ortadaki ~22 pikselde; envanter yuvası kenarları kırpar)
+func _make_gear_icons() -> void:
+	var leather := Color(0.55, 0.35, 0.2)
+	var gold := Color(0.95, 0.8, 0.3)
+	# Gövde zırhı: omuzlu gövde
+	var armor := _new_image(FRAME, FRAME)
+	_rect(armor, Rect2i(8, 8, 16, 18), OUTLINE)
+	_rect(armor, Rect2i(9, 9, 14, 16), STEEL)
+	_rect(armor, Rect2i(6, 8, 4, 6), OUTLINE)
+	_rect(armor, Rect2i(22, 8, 4, 6), OUTLINE)
+	_rect(armor, Rect2i(7, 9, 2, 4), STEEL.darkened(0.2))
+	_rect(armor, Rect2i(23, 9, 2, 4), STEEL.darkened(0.2))
+	_rect(armor, Rect2i(13, 9, 6, 3), OUTLINE)
+	_rect(armor, Rect2i(15, 13, 2, 11), STEEL.darkened(0.25))
+	_save_if_missing("res://assets/items/armor.png", armor)
+	# Eldiven: avuç + parmaklar
+	var gloves := _new_image(FRAME, FRAME)
+	_rect(gloves, Rect2i(10, 14, 12, 12), OUTLINE)
+	_rect(gloves, Rect2i(11, 15, 10, 10), leather)
+	for x in [10, 13, 16, 19]:
+		_rect(gloves, Rect2i(x, 7, 3, 8), OUTLINE)
+		_rect(gloves, Rect2i(x + 1, 8, 1, 7), leather.lightened(0.15))
+	_rect(gloves, Rect2i(10, 22, 12, 3), leather.darkened(0.3))
+	_save_if_missing("res://assets/items/gloves.png", gloves)
+	# Ayakkabı: L biçimli çizme
+	var boots := _new_image(FRAME, FRAME)
+	_rect(boots, Rect2i(10, 6, 8, 18), OUTLINE)
+	_rect(boots, Rect2i(10, 19, 15, 7), OUTLINE)
+	_rect(boots, Rect2i(11, 7, 6, 17), leather)
+	_rect(boots, Rect2i(11, 20, 13, 5), leather)
+	_rect(boots, Rect2i(11, 24, 13, 1), leather.darkened(0.4))
+	_save_if_missing("res://assets/items/boots.png", boots)
+	# Pelerin: aşağı genişleyen kırmızı kumaş
+	var cloak := _new_image(FRAME, FRAME)
+	var red := Color(0.6, 0.12, 0.12)
+	for y in range(6, 27):
+		var half := 4 + (y - 6) / 3
+		_rect(cloak, Rect2i(16 - half - 1, y, half * 2 + 2, 1), OUTLINE)
+		_rect(cloak, Rect2i(16 - half, y, half * 2, 1), red if y < 26 else OUTLINE)
+	_rect(cloak, Rect2i(13, 6, 6, 2), gold)
+	_save_if_missing("res://assets/items/cloak.png", cloak)
+	# Yüzük: altın halka ve taş
+	var ring := _new_image(FRAME, FRAME)
+	_draw_circle(ring, Vector2(16, 18), 7.0, OUTLINE)
+	_draw_circle(ring, Vector2(16, 18), 6.0, gold)
+	_draw_circle(ring, Vector2(16, 18), 4.0, OUTLINE)
+	_draw_circle(ring, Vector2(16, 18), 3.0, Color(0, 0, 0, 0))
+	_draw_circle(ring, Vector2(16, 10), 3.0, OUTLINE)
+	_draw_circle(ring, Vector2(16, 10), 2.0, Color(0.9, 0.2, 0.3))
+	_save_if_missing("res://assets/items/ring.png", ring)
+	# Kemer: yatay kayış ve toka
+	var belt := _new_image(FRAME, FRAME)
+	_rect(belt, Rect2i(5, 12, 22, 8), OUTLINE)
+	_rect(belt, Rect2i(5, 13, 22, 6), leather)
+	_rect(belt, Rect2i(12, 11, 8, 10), OUTLINE)
+	_rect(belt, Rect2i(13, 12, 6, 8), gold)
+	_rect(belt, Rect2i(15, 14, 2, 4), OUTLINE)
+	_save_if_missing("res://assets/items/belt.png", belt)
+	# Oklar: üç çapraz ok
+	var arrows := _new_image(FRAME, FRAME)
+	for offset in [-4, 0, 4]:
+		for i in 14:
+			_px(arrows, Vector2(9 + i + offset, 23 - i), Color(0.7, 0.55, 0.35))
+		_rect(arrows, Rect2i(22 + offset, 8, 3, 3), STEEL)
+		_px(arrows, Vector2(8 + offset, 24), Color(0.9, 0.9, 0.9))
+		_px(arrows, Vector2(9 + offset, 25), Color(0.9, 0.9, 0.9))
+	_save_if_missing("res://assets/items/arrows.png", arrows)
+	# Yay: yay kolu ve kiriş
+	var bow := _new_image(FRAME, FRAME)
+	for i in 21:
+		var angle := -PI / 2.0 + PI * i / 20.0
+		var p := Vector2(12, 16) + Vector2(cos(angle) * 7.0, sin(angle) * 10.0)
+		_draw_circle(bow, p, 1.5, Color(0.5, 0.3, 0.15))
+	for y in range(6, 27):
+		_px(bow, Vector2(12, y), Color(0.9, 0.9, 0.85))
+	_save_if_missing("res://assets/items/bow.png", bow)
 
 # Yapraklı bir ot ve üstünde renkli çiçekler
 func _herb(flower: Color) -> Image:

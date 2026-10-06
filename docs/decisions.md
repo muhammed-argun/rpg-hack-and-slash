@@ -2,6 +2,60 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-06 — Kullanıcı geri bildirimi: yerleşimli çanta, split, dükkân, portre, dash
+- **Çanta artık yerleşimli:** `GameState.bag` 36 elemanlı dizi, her yuva bir `BagStack` (id + adet + gerekirse `ItemData`) ya da null. İksir ve malzeme sayaçları kalktı; `health_potions`, `get_material()` gibi değerler çantadan hesaplanıyor. Dışarıya açık fonksiyonların adı değişmedi (`add_health_potions`, `add_material`, `spend_materials`...). Eski kayıtlar (sayaçlar + `inventory` listesi) yüklenirken çantaya taşınıyor.
+- Yığın sınırı yok; ekipman yığılmaz. Değerli eşyalar ad+nadirlikle yığılır.
+- `BagPanel` ortak bileşen (envanter + dükkân): sürükle-bırak bütün yığını taşır; Split kaydırıcısıyla seçilen adet imlece yapışır, tıklanan yuvaya bırakılır (boş: yerleşir, aynı tür: birleşir, farklı: yer değiştirir ve oradaki eşya imlece geçer). Pencere kapanırken imlecteki yığın çantaya döner.
+- Eşya bilgisi `ItemTooltip` kutusunda; pencereler metne göre büyümüyor. Ders: autowrap'lı Label yüksekliği metinle büyür ve içeriğine göre boy alan pencereyi ekrandan taşırır; uzun metin sabit boyutlu ya da ayrı bir kutuda olmalı.
+- İkonlar `IconFit` ile yerleştiriliyor: görselin dolu kısmı kesilip yuvanın içine tam piksele ortalanıyor, büyükse küçültülüyor. Sebep: 32x32 çizimlerin içeriği tuvalin ortasında değildi.
+- Dükkân: solda çanta (Sat, sağ tıkla hızlı sat, Split), sağda satın alma. Satış fiyatları `CONSUMABLE_SELL_VALUES`, `MATERIAL_SELL_VALUES` (yoksa satılamaz; görev eşyaları satılmaz), eşyalarda `ItemData.value`.
+- Çanta doluysa: ot toplanmaz, simya ürün vermez (malzeme harcanmaz), dükkândan alınmaz.
+- Konuşma kutusunda sağda portre: `res://assets/portraits/<konuşmacı id>.png` (ör. `ezra.png`, `player.png`), yoksa `placeholder.png`. Önerilen boyut 64x64.
+- Dash/yuvarlanma sırasında oyuncunun çarpışma maskesinden düşman katmanı çıkarılıyor: normal düşmanların ve boss'ların içinden geçilir, duvarlardan geçilmez. İçeride biterse en fazla 0,25 sn daha kayarak dışarı çıkar.
+- Ana menü: ortalama artık `CenterContainer` ile; ders: `_ready` sırasında elle `set_anchors_and_offsets_preset(CENTER, MINSIZE)` yapmak, boyut henüz kesinleşmediği için kaymaya yol açabiliyor.
+- Altın kesesi: panel temasının iç boşluğu küçültüldü, duraklat butonuyla aynı boy (24 px).
+
+## 2026-10-06 — PC geçişi 3.7: ekran ayarları ve dışa aktarma
+- Pencere boyutu yalnızca temel çözünürlüğün (480x270) tam katları; tam ekranda Godot'nun tam sayı ölçeklemesi (`scale_mode=integer`) kenarlarda siyah boşluk bırakabilir, bu pixel art'ın keskin kalması için bilerek seçildi.
+- `Settings.apply()` ekran ayarlarını da uygular; headless çalışmada (testler, araçlar) pencereye dokunulmaz.
+- Titreşim ayarı mobilde telefonu, PC'de gamepad'i titreştirir.
+- Dışa aktarma: Windows ve Linux (Steam Deck) ayarları eklendi; şablonlar kurulmadan dışa aktarılamaz.
+- Ders (araç kullanımı): PowerShell here-string'iyle (`@"..."@`) metin eklerken sondaki satır sonu kaybolabiliyor; GDScript'te iki satır birleşip "Expected end of statement" hatası veriyor. Ekledikten sonra `\S\t+\w` desenini aramak bu hatayı yakalıyor.
+
+## 2026-10-06 — PC geçişi 3.5–3.6: birleşik envanter ve karakter penceresi
+- Çanta "yerleşimli" değil, listeli: iksirler, malzemeler ve eşyalar sırayla dizilir; 36 yuva bir **sınır**. Sürükle-bırak yok (tıkla/sağ tık/gamepad A). Sebep: iksir ve malzemeler sayaç olarak tutuluyor; yerleşimli çanta için hepsinin tek bir eşya modeline geçmesi gerekir. İleride gerekirse yapılır.
+- Değerli eşyalar ad+nadirliğe göre yığılır; ekipman yığılmaz (`GameState.bag_stack_key`).
+- Çanta doluyken sandıktan gelen eşya kaybolmasın diye değerine satılıyor.
+- Dükkândaki toplu satış artık yalnızca değerli eşyaları satıyor (`Değerlileri Sat`); ekipman tek tek satılır.
+- `ItemData.Type` kayıtta sayı olarak durduğu için yeni türler hep sona eklenir.
+- Silah setinde yalnızca etkin setin silahları hasara/zırha sayılır.
+- XP formülü tam sayıyla hesaplanıyor. Ders: `500 * 1.6 = 800.0000001` gibi değerler yukarı yuvarlamada 900 verir.
+- Görev günlüğü ayrı pencere (`QuestWindow`, J). Pencere sığmadığı için birleşik pencereye sekme olarak konmadı.
+- Ders: `GridContainer` gizli çocukları atlar; bir hücreyi gizlemek bütün ızgarayı kaydırır. Gizlenecek buton bir `HBoxContainer` hücresinin içine konmalı.
+
+## 2026-10-06 — PC geçişi 3.4: yetenek ve hızlı kullanım yuvaları
+- Yetenek kimliği (`ground_slam`) yuvada durur; `skill_1..3` aksiyonları yuvanın içeriğini kullanır. Yetenek ağacı gelince sadece `GameState.skill_slots` değişecek.
+- Yetenek verisi ikiye bölündü: görünen kısım (ad, ikon) `GameState.SKILLS`, oynanış (mana, bekleme, hasar) `Player` export'ları. Yetenek sayısı artınca ikisi bir `SkillData` kaynağında birleştirilebilir.
+- `skill_cooldown_started` sinyali artık `(skill_id, duration)` taşıyor.
+- Hızlı kullanım yuvaları eşya kimliği tutar (`health_potion`/`mana_potion`); sayı `GameState.consumable_count()`'tan okunur. Yeni tüketilebilir eklemek: `CONSUMABLES` + `consumable_count` + `Player._use_consumable`.
+- Yetenek çubuğu fareyi yakalamaz (`MOUSE_FILTER_IGNORE`); yoksa imleç üstündeyken saldırı engellenirdi.
+
+## 2026-10-06 — PC geçişi 3.3: nişan
+- Nişan tek yerden: `Player.get_aim_direction()`. Menzilli silah ve büyüler de bunu kullanmalı.
+- Gamepad'de sağ çubuk bırakılınca hareket yönü kullanılıyor, duruyorsa son nişan yönü. Hades'teki gibi.
+- Görsel yalnızca saldırı/blok anında nişan tarafına döner; yürürken hareket yönüne bakar.
+- Fare HUD butonunun üstündeyken saldırı yok (`Viewport.gui_get_hovered_control()`). Ders: HUD'da fareyi yakalamaması gereken her Control `mouse_filter = IGNORE` olmalı, yoksa imleç üstündeyken saldırı engellenir.
+- Ders: CSV çevirileri ancak `--import` ile yeniden derlenir. Metin değiştirdikten sonra testten önce import çalıştır.
+- Test, nişanı sağ çubuk aksiyonlarına (`aim_*`) güç vererek simüle ediyor; fareyi `warp_mouse` ile taşıyor.
+
+## 2026-10-06 — PC geçişi 3.2: tuş atama ve Controls autoload'u
+- **Tuşların tek kaynağı kod:** `Controls.DEFAULTS`. project.godot'taki `[input]` bölümü kaldırıldı; aksiyonlar açılışta `Controls.apply()` ile oluşturuluyor. Sebep: varsayılanlar iki yerde durursa birbirinden kopar. Editörün Input Map ekranı artık boş görünür, bu normal.
+- Her aksiyonun iki yuvası var: klavye/fare ve gamepad. Ok tuşlarıyla yürüme kalktı (WASD tek tuş). İstenirse ayarlardan atanır.
+- Kayıt formatı okunabilir kodlar: `key:<fiziksel tuş>`, `mouse:<buton>`, `joy:<buton>`, `axis:<eksen>:<±1>`. Fiziksel tuş = klavye düzeninden bağımsız konum; ekranda oyuncunun düzenindeki harf gösterilir.
+- Tuş atama beklerken (`Controls.capturing`) HUD aksiyon okumaz. Ders: `set_input_as_handled()` sadece GUI'ye gitmeyi durdurur; `Input.is_action_just_pressed` yine true olur. Yakalanan tuşun durumu o kare sürdüğü için bayrak iki kare sonra kalkar.
+- Testler ayar dosyası olarak `user://settings_smoke_test.cfg` kullanır (`Settings.config_path`, `Controls.config_path`) ve tuşları varsayılana çeker.
+- Gamepad odağı: pencereler `menus` grubuna girer; gamepad kullanılırken odakta bir şey yoksa `Controls` görünür son menünün ilk butonunu seçer. Yeni pencere eklerken `add_to_group("menus")` unutulmamalı.
+
 ## 2026-10-06 — PC geçişi 3.1: dokunmatik kontroller kaldırıldı
 - HUD'dan TouchJoystick ve ActionButtons (saldırı, yetenek, blok, yuvarlanma, iksir butonları) çıkarıldı. Scriptler ve ction_button.tscn duruyor (mobil port için).
 - Duraklat/çanta/görev butonları normal Button oldu (ocus_mode = none, klavye/gamepad odağını çalmasınlar diye).

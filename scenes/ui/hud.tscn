@@ -115,6 +115,7 @@ offset_left = 6.0
 offset_top = 52.0
 offset_right = 170.0
 offset_bottom = 84.0
+mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="QuestTitle" type="Label" parent="Root/QuestTracker"]
@@ -162,14 +163,15 @@ horizontal_alignment = 1
 text = "Boss"
 
 [node name="Purse" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -96.0
-offset_top = 4.0
+offset_left = -90.0
+offset_top = 3.0
 offset_right = -30.0
-offset_bottom = 26.0
+offset_bottom = 27.0
 grow_horizontal = 0
 mouse_filter = 2
 

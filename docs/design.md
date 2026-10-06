@@ -13,14 +13,14 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 
 ## Kontroller (PC)
 - **[Yapılacak]** Hareket: WASD (gamepad: sol çubuk)
-- **[Yapılacak]** **Hades tarzı nişan:** Saldırı imlecin gösterdiği yöne yapılır. Karakter imlecin bulunduğu yana döner. Gamepad'de nişan sağ çubukla alınır. İleride menzilli silahlar ve büyüler de aynı nişanı kullanacak.
-- **[Yapılacak]** Sol tık: saldırı (basılı tutunca sürekli)
-- **[Yapılacak]** Yetenekler: E, R, T (3 aktif yuva)
-- **[Yapılacak]** Hızlı kullanım: 1 ve 2. Hangi eşyayı kullanacağı envanterdeki sıraya göre belirlenir (varsayılan: 1 = can iksiri, 2 = mana iksiri).
+- **[Karar]** **Hades tarzı nişan:** Saldırı imlecin gösterdiği yöne yapılır. Karakter imlecin bulunduğu yana döner. Gamepad'de nişan sağ çubukla alınır. İleride menzilli silahlar ve büyüler de aynı nişanı kullanacak.
+- **[Karar]** Sol tık: saldırı (basılı tutunca sürekli). Sağ tık: blok/parry. Space: yuvarlanma (hareket yönüne).
+- **[Karar]** Yetenekler: E, R, T (3 aktif yuva). HUD'da alt ortada yetenek çubuğu.
+- **[Karar]** Hızlı kullanım: 1 ve 2. Yuvaya hangi eşyanın konacağı envanter penceresinden seçilir (varsayılan: 1 = can iksiri, 2 = mana iksiri).
 - **[Karar]** Etkileşim (NPC ile konuşma) ayrı tuş: F. NPC'nin üstünde [F] Konuş ipucu çıkar. Diyalog F, saldırı tuşu ya da tıklamayla ilerler.
-- **[Yapılacak]** Blok/parry, yuvarlanma, envanter (I), karakter (C, aynı pencere), duraklatma (Esc)
-- **[Yapılacak]** Bütün tuşlar ayarlardan değiştirilebilir (klavye ve gamepad).
-- **[Yapılacak]** Özel imleç: Pixel UI Fantasy paketindeki cursor.
+- **[Karar]** Blok/parry (sağ tık), yuvarlanma (Space), karakter ve çanta (I ya da C, aynı pencere), görev günlüğü (J), silah seti değiştir (Q), duraklatma ve geri (Esc). Gamepad karşılıkları `Controls.DEFAULTS`'ta.
+- **[Karar]** Bütün tuşlar ayarlardan değiştirilebilir (klavye ve gamepad).
+- **[Karar]** Özel imleç: Pixel UI Fantasy paketindeki cursor (pencere ölçeğine göre 1x-4x). Gamepad ile oynarken imleç gizlenir, nişan oku görünür.
 - **[Karar]** Ekrandaki dokunmatik kontroller (joystick, aksiyon butonları) PC'de kaldırıldı; kodları mobil port için saklanıyor. Sağ üstteki duraklat/çanta/görev butonları fareyle tıklanan normal butonlar.
 
 ## Dünya ve haritalar
@@ -42,7 +42,7 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 | Rogue | Çevik | Kritik vuruş, hız | Swordsman **[Öneri]** |
 
 - **[Karar]** Şimdilik tek sınıf oynanabilir (Warrior). Yeteneği **Yer Sarsıntısı**: kılıcı yere saplar, çevresindeki herkese vurur, 20 mana harcar.
-- **[Yapılacak]** Özellikler (attributes): STR, AGI, INT, VIT (ya da benzeri). Şimdilik hepsi 10, etkileri sonra tasarlanacak. Seviye atlayınca özellik puanı verilir; sıklığı **[Açık]** (ör. her 3 seviyede bir).
+- **[Karar]** Özellikler (attributes): STR, AGI, INT, VIT. Şimdilik hepsi 10. Seviye atlayınca özellik puanı verilir; şimdilik her seviyede bir (kullanıcı kararı; oyun uzunluğu belli olunca yeniden bakılacak). **[Açık]** Özelliklerin etkileri tasarlanacak.
 - **[Yapılacak]** Yetenek ağacı: açılan yeteneklerden 3'ü E/R/T yuvalarına konur.
 - **[Açık]** Diğer sınıfların kaynak sistemi (mana, enerji, öfke).
 
@@ -66,18 +66,18 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 
 ## İlerleme, loot ve ekonomi
 - **[Karar]** Düşmanlar deneyim verir. Seviye atlayınca can, mana ve hasar artar.
-- **[Yapılacak]** Yeni XP formülü: bir sonraki seviyenin gerekli XP'si, öncekinin 1,6 katı, yukarıya, 100'ün katına yuvarlanır. **[Açık]** Başlangıç değeri (öneri: 1→2 için 100).
-- **[Karar]** Bir bölük yenilince sandık düşer: altın, iksirler, değerli eşyalar. Silah ve zırh, ekipman sistemi gelince düşmeye başlayacak.
+- **[Karar]** XP formülü: bir sonraki seviyenin gerekli XP'si, öncekinin 1,6 katı, yukarıya, 100'ün katına yuvarlanır: 100, 200, 400, 700, 1200, 2000... Başlangıç değeri 100 (kullanıcı onayladı). **[Açık]** Çarpan 1,6 mı 1,4 mü; mob XP'si eğriye bağlanacak.
+- **[Karar]** Bir bölük yenilince sandık düşer: altın, iksirler ve her türden eşya (silah, zırh parçaları, takı, kalkan, ok, değerli eşya). Çanta doluysa eşya değerine satılır.
 - **[Karar]** Nadirlik renkleri: Sıradan (beyaz), Büyülü (mavi), Nadir (sarı), Efsanevi (turuncu).
 - **[Karar]** Dükkân (Kadir): iksir alınır, değerli eşya satılır. Demirci (Borak): cevher + altınla silah +1'den +10'a güçlenir.
 - **[Karar]** Crafting: yerden ot toplanır, Şifacı Mira'da iksir yapılır.
-- **[Yapılacak]** Envanter + karakter penceresi (birleşik, I ve C aynı pencereyi açar):
+- **[Karar]** Envanter + karakter penceresi (birleşik, I ve C aynı pencereyi açar). Görevler ayrı pencerede (J):
   - Sol: 6×6 = 36 yuvalı çanta
   - Sağ: ekipman yuvaları (kask, zırh, eldiven, ayakkabı, pelerin...), iki silah seti (ana el + ikinci el; çift elli silah ikinci eli kilitler), 3 mühimmat türlü sadak, özellikler, seviye, azami can ve mana, XP barı (fareyle üstüne gelince "350/1000" yazar)
 
 ## Arayüz
 - **[Karar]** Tema: Pixel UI Fantasy (parşömen) + Pixel Bars (can/mana/stamina, düşman ve boss barları).
-- **[Karar]** HUD sol üst: can, mana, stamina, seviye ve XP, takip edilen görev. Sağ üst: altın. Üst orta: boss barı. Orta: olay mesajları.
+- **[Karar]** HUD sol üst: can, mana, stamina, seviye ve XP, takip edilen görev. Sağ üst: altın, duraklat/çanta/görev butonları. Üst orta: boss barı. Orta: olay mesajları. Alt orta: yetenek çubuğu (E/R/T + 1/2).
 - **[Yapılacak]** PC HUD'u: alt ortada yetenek çubuğu (E/R/T) ve hızlı kullanım yuvaları (1/2).
 - **[Karar]** Pencereler açıkken oyun duraklar.
 

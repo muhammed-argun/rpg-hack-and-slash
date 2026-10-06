@@ -117,7 +117,7 @@ MSG_SOLD,Satıldı: +%d altın,Sold: +%d gold
 UI_SHOP,Dükkân,Shop
 UI_BUY,Al,Buy
 UI_SELL,Sat,Sell
-UI_SELL_ALL,Hepsini Sat,Sell All
+UI_SELL_ALL,Değerlileri Sat,Sell Valuables
 UI_SMITH,Demirci,Blacksmith
 UI_UPGRADE,Güçlendir,Upgrade
 UI_WEAPON_LEVEL,Silah seviyesi: +%d,Weapon level: +%d
@@ -147,9 +147,122 @@ BOSS_ALDRIC_TITLE,Yozlaşmış Taç,The Corrupted Crown
 BOSS_MALPHAS,Malphas,Malphas
 BOSS_MALPHAS_TITLE,Kül Prensi,The Prince of Ash
 HINT_MOVE,"{move_up} {move_left} {move_down} {move_right} tuşlarıyla yürü.","Walk with {move_up} {move_left} {move_down} {move_right}."
+HINT_MOVE_PAD,Sol çubukla yürü.,Walk with the left stick.
 HINT_TALK,"! işaretli kişilerin görevi var. Yanına git ve [{interact}] tuşuyla konuş.","People marked with ! have a quest. Walk up to them and press [{interact}] to talk."
-HINT_ATTACK,"[{attack}] tuşunu basılı tut: durmadan saldırırsın.","Hold [{attack}] to keep attacking."
+HINT_ATTACK,"[{attack}]: imlecin gösterdiği yöne saldır. Basılı tutarsan durmadan saldırırsın.","[{attack}]: attack toward the cursor. Hold it to keep attacking."
+HINT_ATTACK_PAD,"[{attack}]: saldır. Sağ çubukla nişan alırsın; basılı tutarsan durmadan saldırırsın.","[{attack}]: attack. Aim with the right stick; hold it to keep attacking."
 HINT_BLOCK,"[{block}] basılı tutarsan bloklarsın. Vuruştan hemen önce basarsan PARRY yaparsın!","Hold [{block}] to block. Press it right before a hit to PARRY!"
 HINT_DODGE,"[{dodge}]: yuvarlan. Kırmızı uyarılardan sadece yuvarlanarak kaçabilirsin.","[{dodge}]: roll. Red warnings can only be escaped by rolling."
-HINT_SKILL,"[{skill}]: yetenek. Çevrendeki bütün düşmanlara vurur ve mana harcar.","[{skill}]: skill. Strikes every enemy around you and costs mana."
+HINT_SKILL,"[{skill_1}]: yetenek. Çevrendeki bütün düşmanlara vurur ve mana harcar.","[{skill_1}]: skill. Strikes every enemy around you and costs mana."
 MAP_PROLOGUE,Varneth Yolu,Road to Varneth
+UI_CONTROLS,Kontroller,Controls
+UI_KEYBOARD_MOUSE,Klavye / Fare,Keyboard / Mouse
+UI_GAMEPAD,Gamepad,Gamepad
+UI_RESET_DEFAULTS,Varsayılana Dön,Reset to Defaults
+UI_PRESS_KEY,Bir tuşa bas...,Press a key...
+UI_PRESS_KEY_HINT,"Yeni tuşa bas. İptal: Esc ya da 5 saniye bekle.","Press the new key. Cancel: Esc or wait 5 seconds."
+UI_BINDING_MOVED,"%s artık burada; ""%s"" eyleminden kaldırıldı.","%s moved here; removed from ""%s""."
+UI_BINDINGS_RESET,Tuşlar varsayılana döndü.,Controls reset to defaults.
+ACTION_MOVE_UP,Yukarı yürü,Move up
+ACTION_MOVE_DOWN,Aşağı yürü,Move down
+ACTION_MOVE_LEFT,Sola yürü,Move left
+ACTION_MOVE_RIGHT,Sağa yürü,Move right
+ACTION_ATTACK,Saldırı,Attack
+ACTION_BLOCK,Blok / Parry,Block / Parry
+ACTION_DODGE,Yuvarlan,Dodge roll
+ACTION_INTERACT,Konuş / Etkileş,Talk / Interact
+ACTION_SKILL_1,Yetenek 1,Skill 1
+ACTION_SKILL_2,Yetenek 2,Skill 2
+ACTION_SKILL_3,Yetenek 3,Skill 3
+ACTION_QUICK_SLOT_1,Hızlı kullanım 1,Quick slot 1
+ACTION_QUICK_SLOT_2,Hızlı kullanım 2,Quick slot 2
+ACTION_TOGGLE_INVENTORY,Envanter,Inventory
+ACTION_TOGGLE_CHARACTER,Karakter,Character
+ACTION_PAUSE,Duraklat,Pause
+KEY_MOUSE_LEFT,Sol Tık,Left Click
+KEY_MOUSE_RIGHT,Sağ Tık,Right Click
+KEY_MOUSE_MIDDLE,Orta Tık,Middle Click
+KEY_MOUSE_N,Fare %d,Mouse %d
+PAD_DPAD_UP,Yön Yukarı,D-Pad Up
+PAD_DPAD_DOWN,Yön Aşağı,D-Pad Down
+PAD_DPAD_LEFT,Yön Sol,D-Pad Left
+PAD_DPAD_RIGHT,Yön Sağ,D-Pad Right
+PAD_UP,Yukarı,Up
+PAD_DOWN,Aşağı,Down
+PAD_LEFT,Sol,Left
+PAD_RIGHT,Sağ,Right
+PAD_DPAD_UP_SHORT,D-Üst,D-Up
+PAD_DPAD_DOWN_SHORT,D-Alt,D-Dn
+PAD_DPAD_LEFT_SHORT,D-Sol,D-L
+PAD_DPAD_RIGHT_SHORT,D-Sağ,D-R
+UI_CHARACTER,Karakter ve Çanta,Character and Bag
+UI_QUIVER,Sadak,Quiver
+UI_EQUIP,Kuşan,Equip
+UI_UNEQUIP,Çıkar,Unequip
+UI_EMPTY_SLOT,Boş yuva.,Empty slot.
+UI_HP_MP,Can %d  Mana %d,HP %d  Mana %d
+UI_DAMAGE_DEFENSE,Hasar %d  Zırh %d,Damage %d  Armor %d
+UI_ATTRIBUTE_POINTS,Dağıtılacak puan: %d,Points to spend: %d
+UI_ASSIGN_QUICK_SLOT,Hızlı kullanım yuvası %s,Quick slot %s
+ATTR_STR,Güç,Strength
+ATTR_AGI,Çeviklik,Agility
+ATTR_INT,Zekâ,Intellect
+ATTR_VIT,Dayanıklılık,Vitality
+ATTR_STR_DESC,Güç: yakın dövüş hasarı (henüz etkisi yok).,Strength: melee damage (no effect yet).
+ATTR_AGI_DESC,Çeviklik: saldırı hızı ve menzilli hasar (henüz etkisi yok).,Agility: attack speed and ranged damage (no effect yet).
+ATTR_INT_DESC,Zekâ: büyü hasarı ve mana (henüz etkisi yok).,Intellect: spell damage and mana (no effect yet).
+ATTR_VIT_DESC,Dayanıklılık: can ve stamina (henüz etkisi yok).,Vitality: health and stamina (no effect yet).
+SLOT_HELMET,Kask,Helmet
+SLOT_AMULET,Kolye,Amulet
+SLOT_ARMOR,Zırh,Armor
+SLOT_CLOAK,Pelerin,Cloak
+SLOT_GLOVES,Eldiven,Gloves
+SLOT_BELT,Kemer,Belt
+SLOT_RING,Yüzük,Ring
+SLOT_BOOTS,Ayakkabı,Boots
+SLOT_MAIN_HAND,Ana el,Main hand
+SLOT_OFF_HAND,İkinci el,Off hand
+SLOT_AMMO,Mühimmat,Ammunition
+ITEM_TYPE_WEAPON,Silah,Weapon
+ITEM_TYPE_ARMOR,Zırh,Armor
+ITEM_TYPE_VALUABLE,Değerli eşya,Valuable
+ITEM_TYPE_HELMET,Kask,Helmet
+ITEM_TYPE_GLOVES,Eldiven,Gloves
+ITEM_TYPE_BOOTS,Ayakkabı,Boots
+ITEM_TYPE_CLOAK,Pelerin,Cloak
+ITEM_TYPE_RING,Yüzük,Ring
+ITEM_TYPE_AMULET,Kolye,Amulet
+ITEM_TYPE_BELT,Kemer,Belt
+ITEM_TYPE_OFFHAND,İkinci el,Off hand
+ITEM_TYPE_AMMO,Mühimmat,Ammunition
+ITEM_TWO_HANDED,çift elli,two-handed
+ITEM_DAMAGE_BONUS,+%d hasar,+%d damage
+ITEM_DEFENSE_BONUS,+%d zırh,+%d armor
+ITEM_GREATSWORD,Büyük Kılıç,Greatsword
+ITEM_BOW,Yay,Bow
+ITEM_HELMET,Kask,Helmet
+ITEM_GLOVES,Eldiven,Gloves
+ITEM_BOOTS,Çizme,Boots
+ITEM_CLOAK,Pelerin,Cloak
+ITEM_BELT,Kemer,Belt
+ITEM_SHIELD,Kalkan,Shield
+ITEM_RING,Yüzük,Ring
+ITEM_AMULET,Kolye,Amulet
+ITEM_ARROWS,Oklar,Arrows
+MSG_EQUIPPED,Kuşanıldı: %s,Equipped: %s
+MSG_BAG_FULL,Çanta dolu.,Bag is full.
+MSG_BAG_FULL_SOLD,Çanta dolu: %s satıldı.,Bag full: %s was sold.
+MSG_OFFHAND_LOCKED,Çift elli silah takılıyken ikinci el kullanılamaz.,The off hand is locked while a two-handed weapon is equipped.
+MSG_WEAPON_SET,Silah seti %d,Weapon set %d
+MSG_ATTRIBUTE_POINT,Yeni özellik puanı! (C),New attribute point! (C)
+ACTION_SWAP_WEAPONS,Silah seti değiştir,Swap weapon set
+ACTION_TOGGLE_QUESTS,Görevler,Quests
+UI_FULLSCREEN,Tam ekran,Fullscreen
+UI_WINDOW_SIZE,Pencere,Window
+UI_VSYNC,Dikey eşitleme (V-Sync),Vertical sync (V-Sync)
+UI_CANCEL,İptal,Cancel
+UI_SPLIT,Böl,Split
+UI_SPLIT_TITLE,Kaç tane ayrılsın?,How many to split off?
+UI_SELL_PRICE,Satış: %d altın,Sells for: %d gold
+UI_CANNOT_SELL,Bu eşya satılamaz.,This item cannot be sold.
+UI_SHOP_BUY,Satın al,Buy

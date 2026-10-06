@@ -12,6 +12,8 @@ var _upgrade: Button
 
 
 func _ready() -> void:
+	# Gamepad ile açılınca ilk butonu odaklansın (Controls.focus_top_menu)
+	add_to_group("menus")
 	theme_type_variation = &"WindowPanel"
 	custom_minimum_size = Vector2(200, 0)
 	var box := VBoxContainer.new()

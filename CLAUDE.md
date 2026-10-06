@@ -2,6 +2,7 @@
 
 Bu dosya her Claude oturumunun başında otomatik okunur.
 **Yeni bir oturumdaysan önce `docs/handoff.md` dosyasını oku.** Projenin şu anki durumu, sıradaki işler ve kullanıcının bekleyen istekleri orada.
+**İş dağıtımı:** Bu projede üç alt ajan var (`mimar` = Opus, `kod-gelistirici` = Sonnet, `basit-isler` = Haiku). Kod dışı basit işler `basit-isler`'e, kod işleri `kod-gelistirici`'ye, büyük tasarımlar önce `mimar`'a verilir. Kurallar ve iş verme biçimi: `docs/agents.md`.
 
 ## Proje özeti
 - **Ne:** 2D, pixel art, Diablo/Hades karışımı hack and slash RPG. Karanlık fantastik hikâye, 9 boss + final (Kral → Malphas).
@@ -22,6 +23,7 @@ Bu dosya her Claude oturumunun başında otomatik okunur.
 | Dosya | İçerik |
 |---|---|
 | `handoff.md` | **Buradan başla.** Şu anki durum, sıradaki işler, bekleyen sorular |
+| `agents.md` | Hangi işin hangi ajana (mimar / kod-gelistirici / basit-isler) verileceği ve nasıl verileceği |
 | `design.md` | Oyun tasarımı: kontroller, savaş, sınıflar, ekonomi ([Karar]/[Öneri]/[Açık] etiketli) |
 | `roadmap.md` | Yol haritası ve sistemlerin durumu |
 | `decisions.md` | Tarihli teknik kararlar ve **öğrenilen dersler** (en yeni en üstte). Yeni karar ya da ders çıkınca buraya ekle |
@@ -41,16 +43,18 @@ Bu dosya her Claude oturumunun başında otomatik okunur.
 - `ReadyAssetSets/`: indirilen ham paketler (`.gdignore` ile Godot'dan gizli). Klasör adları kısa olmalı (Windows 260 karakter yol sınırı)
 
 ## Mimari
-- **Autoload'lar:** `Settings` (dil, ses, titreşim; `user://settings.cfg`), `Quests` (görevler), `Dialogue` (NPC konuşmaları), `Audio` (efekt ve müzik), `GameState` (oyuncu durumu, kayıt/yükleme; `user://save.json`)
+- **Autoload'lar:** `Settings` (dil, ses, titreşim; `user://settings.cfg`), `Controls` (tuş atamaları, varsayılanlar `Controls.DEFAULTS`; aynı dosyada [controls]; son kullanılan cihaz), `Quests` (görevler), `Dialogue` (NPC konuşmaları), `Audio` (efekt ve müzik), `GameState` (oyuncu durumu, kayıt/yükleme; `user://save.json`)
 - `Main` (`scenes/main.tscn`) haritaları yükler. Oyuncu tek bir instance; harita değişince yeni haritaya taşınır (`Map.add_player`)
 - Yeni oyun `scenes/maps/prologue.tscn` haritasında başlar; ölünce `town.tscn` haritasında doğulur
 - **Haritalar:** Kök node'da `Map` scripti (`map_size`, `map_id`, `name_key`, `tint`, `music`). Alt yapı: `Ground` (TileMapLayer), `Entities` (y-sort; içinde `Walls` TileMapLayer, NPC'ler, düşman bölükleri), `Spawns` (Marker2D), `Exits` (MapExit). Navigasyon harita açılırken engellerden otomatik çıkarılır.
 - **Veriye dayalı içerik:** Görevler, diyaloglar, tarifler, sesler JSON'da. Koşullar `GameConditions` ile değerlendirilir. Boss'lar `Boss` + `BossAttack` kaynakları + `BossArena`.
 - **Metinler:** Oyuncuya görünen her metin bir çeviri anahtarıdır. Yeni metin eklerken `data/translations/*.csv` dosyasına TR ve EN birlikte eklenir. Arayüzde `text = "ANAHTAR"` yazmak yeter (Godot otomatik çevirir), koddan `tr("ANAHTAR")`.
+- **Çanta:** `GameState.bag` (36 `BagStack` ya da null). İksir/malzeme sayıları çantadan hesaplanır; eşya eklerken `add_health_potions`/`add_material`/`add_item` kullan, diziyi elle değiştirdiysen `_bag_changed()` çağır.
+- **NPC portreleri:** `assets/portraits/<id>.png` (64x64), yoksa `placeholder.png`.
 - **Karakter görselleri:** `CharacterSprite`, klasörden `<animasyon>_<yön>_<NN>.png` kuralıyla yükler (ayrıntı: `docs/assets.md`). Görsel eklemek kod değişikliği gerektirmez.
 - **Savaş:** Düşman saldırıları `Player.take_damage(miktar, kaynak, Combat.Kind)` ile verilir. `Combat.Kind`: NORMAL, HEAVY (turuncu uyarı), UNBLOCKABLE (kırmızı uyarı). Sonuç `Combat.Result` (HIT, BLOCKED, PARRIED, DODGED, GUARD_BROKEN).
-- **Girdi:** Oyun kodu yalnızca Input Map aksiyonlarını okur (`move_*`, `attack`, `interact`, `skill`, `block`, `dodge`, `use_potion`, `use_mana_potion`, `toggle_inventory`, `pause`). Klavye ve gamepad aynı aksiyonları tetikler (dokunmatik kod mobil port için saklı, HUD'da yok). Metinde tuş adı gerekirse `Settings.format_action_keys("{interact}")` kullanılır, tuş adı metne yazılmaz.
-- **Pencereler** (envanter, simya, dükkân, demirci, diyalog, duraklatma) açıkken `get_tree().paused = true`; HUD `PROCESS_MODE_ALWAYS`.
+- **Girdi:** Oyun kodu yalnızca Input Map aksiyonlarını okur (`move_*`, `aim_*`, `attack`, `interact`, `skill_1/2/3`, `block`, `dodge`, `quick_slot_1/2`, `toggle_inventory`, `toggle_character`, `pause`). Aksiyonlar project.godot'ta değil `Controls.DEFAULTS`'ta tanımlı. Klavye ve gamepad aynı aksiyonları tetikler (dokunmatik kod mobil port için saklı, HUD'da yok). Metinde tuş adı gerekirse `Controls.format_action_keys("{interact}")` kullanılır, tuş adı metne yazılmaz.
+- **Pencereler** (envanter, simya, dükkân, demirci, diyalog, duraklatma) açıkken `get_tree().paused = true`; HUD `PROCESS_MODE_ALWAYS`. Gamepad odağı için her pencere `add_to_group("menus")` yapar; Esc / gamepad B geri tuşudur.
 - Çarpışma katmanları: 1 = world, 2 = player, 3 = enemy
 - Yer efektleri (uyarı alanı, şok dalgası) `Map.add_ground_effect()` ile zemin ve karakterler arasına çizilir.
 
@@ -67,7 +71,7 @@ Godot: `E:\GodotSetup\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_co
 | Amaç | Komut |
 |---|---|
 | Script hata kontrolü / içe aktarma | `godot --headless --path . --import` (yeni addon/tema sonrası ilk çalıştırma doku hatası verebilir, ikinci temiz olmalı) |
-| **Duman testi** (73 kontrol, oyunu otomatik oynar) | `godot --path . res://tools/smoke_test.tscn --quit-after 20000` |
+| **Duman testi** (150 kontrol, oyunu otomatik oynar) | `godot --path . res://tools/smoke_test.tscn --quit-after 20000` |
 | **Boss testi** (10 boss) | `godot --path . res://tools/boss_test.tscn --quit-after 50000 -- --all` |
 | Tek boss'u elle dene | `godot --path . res://tools/boss_test.tscn -- --boss=fenris` |
 | Haritaları üret (var olanın üzerine yazmaz) | `godot --headless --path . res://tools/build_demo_maps.tscn` |

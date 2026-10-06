@@ -6,8 +6,8 @@ const TEXTURE_CLOSED := "res://assets/objects/chest_closed.png"
 const TEXTURE_OPEN := "res://assets/objects/chest_open.png"
 # Sandık belirdikten sonra açılabilir hâle gelene kadar geçen süre
 const ARM_DELAY := 0.6
-# Şimdilik yalnızca değerli eşya düşer (silah/zırh görselleri henüz yok)
-const LOOT_TYPES: Array[ItemData.Type] = [ItemData.Type.VALUABLE]
+# Her tür eşya düşebilir (boş liste = hepsi). Ekipman ikonları şimdilik yer tutucu.
+const LOOT_TYPES: Array[ItemData.Type] = []
 
 @export var loot_level: int = 1
 ## Seviye başına altın aralığı

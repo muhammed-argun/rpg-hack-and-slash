@@ -33,6 +33,8 @@ func _ready() -> void:
 	_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	add_child(_label)
 	Settings.changed.connect(_refresh_text)
+	Controls.device_changed.connect(_refresh_text.unbind(1))
+	Controls.bindings_changed.connect(_refresh_text)
 	Dialogue.dialogue_finished.connect(func(_npc: String, _dialogue: String) -> void: _complete("talk"))
 	hide()
 
@@ -101,12 +103,16 @@ func _show(id: String, key: String) -> void:
 	reset_size()
 	await get_tree().process_frame
 	reset_size()
-	position = Vector2((get_viewport_rect().size.x - size.x) / 2.0, get_viewport_rect().size.y - size.y - 16.0)
+	position = Vector2((get_viewport_rect().size.x - size.x) / 2.0, get_viewport_rect().size.y - size.y - 46.0)
 
 
 func _refresh_text() -> void:
 	if not _current_key.is_empty():
-		_label.text = Settings.format_action_keys(tr(_current_key))
+		# Gamepad ile oynanıyorsa varsa gamepad'e özel metin (<ANAHTAR>_PAD)
+		var key := _current_key
+		if Controls.using_gamepad and tr(key + "_PAD") != key + "_PAD":
+			key += "_PAD"
+		_label.text = Controls.format_action_keys(tr(key))
 
 
 func _complete(id: String) -> void:
