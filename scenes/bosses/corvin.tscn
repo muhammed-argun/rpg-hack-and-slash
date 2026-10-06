@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_dxs0e"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_l231i"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="3_4j80y"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="4_7jwmt"]
+
+[sub_resource type="Resource" id="Resource_2pcia"]
+script = ExtResource("2_l231i")
+weight = 4.0
+damage = 18
+max_range = 34.0
+recovery = 0.9
+animation = "attack"
+combo_hits = 4
+
+[sub_resource type="Resource" id="Resource_l6elp"]
+script = ExtResource("2_l231i")
+type = 3
+kind = 2
+weight = 1.5
+damage = 24
+min_range = 50.0
+max_range = 200.0
+radius = 14.0
+windup = 0.5
+charge_speed = 380.0
+charge_distance = 170.0
+
+[sub_resource type="Resource" id="Resource_a1mgi"]
+script = ExtResource("2_l231i")
+type = 1
+kind = 1
+weight = 1.5
+damage = 22
+radius = 30.0
+offset = 14.0
+windup = 0.6
+
+[sub_resource type="Resource" id="Resource_g563g"]
+script = ExtResource("2_l231i")
+kind = 1
+min_phase = 2
+weight = 4.0
+damage = 22
+max_range = 34.0
+recovery = 0.7
+animation = "attack"
+combo_hits = 4
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lx8tn"]
+radius = 9.6
+
+[node name="Corvin" type="CharacterBody2D" unique_id=989669029]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_dxs0e")
+boss_id = "corvin"
+title_key = "BOSS_CORVIN_TITLE"
+attacks = Array[ExtResource("2_l231i")]([SubResource("Resource_2pcia"), SubResource("Resource_l6elp"), SubResource("Resource_a1mgi"), SubResource("Resource_g563g")])
+name_key = "BOSS_CORVIN"
+max_hp = 820
+xp_reward = 300
+move_speed = 80.0
+attack_range = 30.0
+poise = 180.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=524411861]
+modulate = Color(0.35, 0.33, 0.42, 1)
+scale = Vector2(1.6, 1.6)
+script = ExtResource("3_4j80y")
+sprite_folder = "res://assets/characters/soldier"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1509483326]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_lx8tn")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1730503749]
+position = Vector2(0, -51.2)
+script = ExtResource("4_7jwmt")

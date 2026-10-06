@@ -1,0 +1,107 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_4w2kn"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_pspk2"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/demon.tscn" id="3_o27md"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="4_vwwo4"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="5_46x7s"]
+
+[sub_resource type="Resource" id="Resource_4sy1r"]
+script = ExtResource("2_pspk2")
+kind = 1
+weight = 3.0
+damage = 26
+recovery = 0.9
+animation = "attack"
+hit_frame = 4
+combo_hits = 3
+
+[sub_resource type="Resource" id="Resource_m2n1k"]
+script = ExtResource("2_pspk2")
+type = 4
+damage = 0
+max_range = 300.0
+recovery = 3.0
+windup = 0.9
+summon_scene = ExtResource("3_o27md")
+
+[sub_resource type="Resource" id="Resource_prlpw"]
+script = ExtResource("2_pspk2")
+type = 6
+weight = 1.5
+damage = 0
+max_range = 300.0
+recovery = 0.2
+teleport_distance = 30.0
+
+[sub_resource type="Resource" id="Resource_h36lg"]
+script = ExtResource("2_pspk2")
+type = 7
+kind = 2
+min_phase = 2
+weight = 2.0
+damage = 26
+max_range = 320.0
+radius = 24.0
+windup = 0.9
+count = 9
+spread = 120.0
+
+[sub_resource type="Resource" id="Resource_k5v23"]
+script = ExtResource("2_pspk2")
+type = 8
+kind = 2
+min_phase = 2
+weight = 2.0
+damage = 30
+max_range = 300.0
+radius = 12.0
+windup = 0.8
+length = 280.0
+
+[sub_resource type="Resource" id="Resource_hwxmr"]
+script = ExtResource("2_pspk2")
+type = 2
+kind = 2
+min_phase = 2
+damage = 30
+max_range = 70.0
+radius = 90.0
+windup = 1.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_w031l"]
+radius = 13.8
+
+[node name="Malphas" type="CharacterBody2D" unique_id=862997604]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_4w2kn")
+boss_id = "malphas"
+title_key = "BOSS_MALPHAS_TITLE"
+attacks = Array[ExtResource("2_pspk2")]([SubResource("Resource_4sy1r"), SubResource("Resource_m2n1k"), SubResource("Resource_prlpw"), SubResource("Resource_h36lg"), SubResource("Resource_k5v23"), SubResource("Resource_hwxmr")])
+gives_shard = false
+name_key = "BOSS_MALPHAS"
+max_hp = 1400
+xp_reward = 800
+move_speed = 70.0
+attack_range = 32.0
+poise = 260.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=641387851]
+modulate = Color(0.45, 0.2, 0.2, 1)
+scale = Vector2(2.3, 2.3)
+script = ExtResource("4_vwwo4")
+sprite_folder = "res://assets/enemies/demon"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2095664787]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_w031l")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1156525066]
+position = Vector2(0, -73.6)
+script = ExtResource("5_46x7s")

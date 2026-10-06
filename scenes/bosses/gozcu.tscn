@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_1xjuj"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_pukf2"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="3_4by6f"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="4_aqelm"]
+
+[sub_resource type="Resource" id="Resource_gqwvq"]
+script = ExtResource("2_pukf2")
+type = 8
+kind = 2
+weight = 3.0
+damage = 24
+max_range = 260.0
+recovery = 1.2
+radius = 10.0
+windup = 0.9
+length = 240.0
+
+[sub_resource type="Resource" id="Resource_hajqt"]
+script = ExtResource("2_pukf2")
+type = 7
+weight = 2.0
+damage = 12
+max_range = 260.0
+radius = 18.0
+count = 4
+spread = 60.0
+
+[sub_resource type="Resource" id="Resource_7ul6o"]
+script = ExtResource("2_pukf2")
+type = 6
+damage = 0
+recovery = 0.5
+teleport_distance = 90.0
+
+[sub_resource type="Resource" id="Resource_5j4mt"]
+script = ExtResource("2_pukf2")
+type = 5
+min_phase = 2
+weight = 2.0
+damage = 10
+max_range = 260.0
+windup = 0.5
+spread = 40.0
+projectile_color = Color(0.7, 1, 0.4, 1)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_s858c"]
+radius = 10.8
+
+[node name="Gozcu" type="CharacterBody2D" unique_id=1914680741]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_1xjuj")
+boss_id = "gozcu"
+title_key = "BOSS_GOZCU_TITLE"
+attacks = Array[ExtResource("2_pukf2")]([SubResource("Resource_gqwvq"), SubResource("Resource_hajqt"), SubResource("Resource_7ul6o"), SubResource("Resource_5j4mt")])
+name_key = "BOSS_GOZCU"
+max_hp = 560
+xp_reward = 210
+move_speed = 45.0
+attack_range = 60.0
+poise = 110.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1764742879]
+modulate = Color(0.75, 0.95, 0.45, 1)
+scale = Vector2(1.8, 1.8)
+script = ExtResource("3_4by6f")
+sprite_folder = "res://assets/enemies/blood_monster"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1332559477]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_s858c")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1085421268]
+position = Vector2(0, -57.6)
+script = ExtResource("4_aqelm")

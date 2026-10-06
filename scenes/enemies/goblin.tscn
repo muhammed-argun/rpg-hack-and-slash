@@ -12,6 +12,10 @@ collision_layer = 4
 collision_mask = 7
 motion_mode = 1
 script = ExtResource("1_enemy")
+enemy_id = "goblin"
+name_key = "ENEMY_GOBLIN"
+poise = 25.0
+xp_reward = 6
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 script = ExtResource("2_sprite")

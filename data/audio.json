@@ -1,0 +1,40 @@
+{
+	"_note": "Ses adı -> dosya(lar). Birden fazla dosya varsa rastgele biri çalınır. Dosya yoksa ses sessizce atlanır. Paketler gelince dosyalar assets/audio/ altına bu adlarla kopyalanacak.",
+	"sfx": {
+		"swing": ["res://assets/audio/sfx/swing_1.ogg", "res://assets/audio/sfx/swing_2.ogg", "res://assets/audio/sfx/swing_3.ogg"],
+		"hit": ["res://assets/audio/sfx/hit_1.ogg", "res://assets/audio/sfx/hit_2.ogg"],
+		"crit": ["res://assets/audio/sfx/crit.ogg"],
+		"player_hurt": ["res://assets/audio/sfx/player_hurt.ogg"],
+		"enemy_death": ["res://assets/audio/sfx/enemy_death.ogg"],
+		"block": ["res://assets/audio/sfx/block.ogg"],
+		"parry": ["res://assets/audio/sfx/parry.ogg"],
+		"guard_break": ["res://assets/audio/sfx/guard_break.ogg"],
+		"dodge": ["res://assets/audio/sfx/dodge.ogg"],
+		"skill_slam": ["res://assets/audio/sfx/slam.ogg"],
+		"enemy_slam": ["res://assets/audio/sfx/enemy_slam.ogg"],
+		"telegraph": ["res://assets/audio/sfx/warning.ogg"],
+		"projectile": ["res://assets/audio/sfx/magic_shot.ogg"],
+		"drink": ["res://assets/audio/sfx/drink.ogg"],
+		"pickup": ["res://assets/audio/sfx/pickup.ogg"],
+		"coin": ["res://assets/audio/sfx/coin.ogg"],
+		"chest_open": ["res://assets/audio/sfx/chest_open.ogg"],
+		"level_up": ["res://assets/audio/sfx/level_up.ogg"],
+		"quest_start": ["res://assets/audio/sfx/quest_start.ogg"],
+		"quest_complete": ["res://assets/audio/sfx/quest_complete.ogg"],
+		"shard": ["res://assets/audio/sfx/shard.ogg"],
+		"boss_roar": ["res://assets/audio/sfx/boss_roar.ogg"],
+		"ui_open": ["res://assets/audio/sfx/ui_open.ogg"],
+		"ui_close": ["res://assets/audio/sfx/ui_close.ogg"],
+		"dialogue": ["res://assets/audio/sfx/dialogue_blip.ogg"],
+		"craft": ["res://assets/audio/sfx/craft.ogg"],
+		"anvil": ["res://assets/audio/sfx/anvil.ogg"]
+	},
+	"music": {
+		"menu": "res://assets/audio/music/menu.ogg",
+		"town": "res://assets/audio/music/town.ogg",
+		"wild": "res://assets/audio/music/wild.ogg",
+		"boss": "res://assets/audio/music/boss.ogg",
+		"final_boss": "res://assets/audio/music/final_boss.ogg",
+		"ending": "res://assets/audio/music/ending.ogg"
+	}
+}

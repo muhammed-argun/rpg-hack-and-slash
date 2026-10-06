@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_3ixjv"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_5wwvg"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/blood_monster.tscn" id="3_ofk3y"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="4_r5ope"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="5_qur5j"]
+
+[sub_resource type="Resource" id="Resource_8svs0"]
+script = ExtResource("2_5wwvg")
+weight = 3.0
+damage = 16
+recovery = 0.8
+animation = "attack"
+hit_frame = 4
+combo_hits = 2
+
+[sub_resource type="Resource" id="Resource_ip853"]
+script = ExtResource("2_5wwvg")
+type = 4
+damage = 0
+max_range = 300.0
+recovery = 2.0
+summon_scene = ExtResource("3_ofk3y")
+
+[sub_resource type="Resource" id="Resource_tu25x"]
+script = ExtResource("2_5wwvg")
+type = 6
+weight = 1.5
+damage = 0
+max_range = 60.0
+recovery = 0.3
+teleport_distance = 50.0
+
+[sub_resource type="Resource" id="Resource_evapc"]
+script = ExtResource("2_5wwvg")
+type = 7
+kind = 2
+min_phase = 2
+weight = 2.5
+damage = 16
+max_range = 300.0
+radius = 16.0
+windup = 0.8
+count = 7
+spread = 90.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dlv0j"]
+radius = 9.6
+
+[node name="Velzara" type="CharacterBody2D" unique_id=1948422544]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_3ixjv")
+boss_id = "velzara"
+title_key = "BOSS_VELZARA_TITLE"
+attacks = Array[ExtResource("2_5wwvg")]([SubResource("Resource_8svs0"), SubResource("Resource_ip853"), SubResource("Resource_tu25x"), SubResource("Resource_evapc")])
+name_key = "BOSS_VELZARA"
+max_hp = 600
+xp_reward = 250
+move_speed = 75.0
+attack_range = 34.0
+poise = 110.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1677387000]
+modulate = Color(1, 0.5, 0.55, 1)
+scale = Vector2(1.6, 1.6)
+script = ExtResource("4_r5ope")
+sprite_folder = "res://assets/enemies/demon"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1378990675]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_dlv0j")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=503890913]
+position = Vector2(0, -51.2)
+script = ExtResource("5_qur5j")

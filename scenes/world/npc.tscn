@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/npc.gd" id="1_npc"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="2_sprite"]
+[ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="3_theme"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 6.0
+
+[node name="NPC" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_npc")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+script = ExtResource("2_sprite")
+sprite_folder = "res://assets/characters/soldier"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="Body" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -4)
+shape = SubResource("CircleShape2D_body")
+
+[node name="NameLabel" type="Label" parent="."]
+z_index = 50
+offset_left = -50.0
+offset_top = -46.0
+offset_right = 50.0
+offset_bottom = -33.0
+theme = ExtResource("3_theme")
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+text = "NPC"
+
+[node name="Marker" type="Label" parent="."]
+z_index = 50
+offset_left = -10.0
+offset_top = -60.0
+offset_right = 10.0
+offset_bottom = -47.0
+theme = ExtResource("3_theme")
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1

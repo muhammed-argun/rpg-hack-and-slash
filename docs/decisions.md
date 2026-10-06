@@ -2,6 +2,37 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-06 — Gece çalışması: ses, ipuçları, yol bulma, prolog
+- **Ses:** `Audio` autoload'u. Oyundaki olaylar isimli sesler çalar (`swing`, `hit`, `parry`...). Ad → dosya eşlemesi `data/audio.json` dosyasında; dosya yoksa ses atlanır. Haritaların müziği `Map.music`, boss dövüşünde boss müziği çalar.
+- **Öğretici ipuçları:** İlk oyunda hareket, konuşma, saldırı, blok/parry, yuvarlanma ve yetenek için sırayla ipucu çıkar. Her biri bir kez yapılınca kaybolur (`tutorial_*` bayrakları).
+- **Yol bulma:** Her harita açılırken Walls katmanındaki engellerden navigasyon alanı çıkarılıyor (ayrı iş parçacığında). Düşmanlar `NavigationAgent2D` ile engellerin etrafından dolaşıyor.
+- **Prolog:** Yeni oyun gece "Varneth Yolu" haritasında, kısa bir anlatı kartıyla başlıyor. Ork yağmacıları ve öğretici ipuçları burada. Doğudaki kapı şehrin güneyine açılıyor. Ölünce şehirde doğuluyor.
+- **Android dışa aktarma:** `export_presets.cfg`, `data/*.json` dosyalarını içeri alıyor; `tools`, `docs` ve `ReadyAssetSets` klasörlerini dışarıda bırakıyor. Paket adı `com.example.kulprensi` bir yer tutucu, yayından önce değiştirilmeli.
+
+## 2026-10-06 — Gece çalışması: ilerleme ve boss'lar
+- **Seviye:** Düşmanlar deneyim verir. Seviye başına +12 can, +5 mana, +2 hasar; seviye atlayınca can ve mana dolar. En yüksek seviye 30.
+- **Dükkân (Kadir):** Can iksiri 20, mana iksiri 25 altın. Değerli eşyalar tek tek ya da hepsi birden satılır.
+- **Demirci (Borak):** Silah +1'den +10'a kadar güçlenir. Her seviye +3 hasar; bedeli seviye × (1 cevher + 30 altın).
+- **Boss'lar:** 9 boss + Kral + Malphas veri olarak hazır. Kral ölünce aynı arenada Malphas başlar; Malphas parça vermez, `game_completed` bayrağıyla oyun sonu ekranı açılır.
+- **Yeni boss saldırı türleri:** mermi, ışınlanma, yağmur (çoklu alan), çizgi (ışın/yarık).
+- **Ders:** Ölen bir node'a bağlı gecikmeli çağrılar, node silinince çalışmaz. Kral→Malphas geçişi ve yağmur saldırıları bu yüzden statik fonksiyonlarla yapılıyor.
+
+## 2026-10-06 — Gece çalışması: çekirdek sistemler
+- **Dil:** TR/EN. Metinler `data/translations/ui.csv` (arayüz) ve `story.csv` (görev, diyalog, NPC) dosyalarında. Arayüzde metin yerine çeviri anahtarı yazılır, Godot otomatik çevirir. Koddan `tr("ANAHTAR")` kullanılır.
+- **Ayarlar:** `Settings` autoload'u; dil, müzik ve efekt sesi (Music/SFX bus'ları), titreşim. `user://settings.cfg` dosyasına kaydedilir.
+- **Ana menü** (başlangıç sahnesi): Devam Et, Yeni Oyun, Ayarlar, Emeği Geçenler, Çıkış. **Duraklatma menüsü:** Esc, P, Android geri tuşu ya da HUD'daki duraklat butonu.
+- **Kayıt:** `user://save.json`. Harita değişiminde, görev ilerleyince, 60 saniyede bir ve uygulama arka plana alınınca otomatik kaydedilir.
+- **Savunma:** Blok (L / kalkan butonu) hasarın %80'ini keser, stamina harcar; stamina biterse savunma kırılır. Blok tuşuna saldırıdan en fazla 0,2 sn önce basılırsa **parry** olur: düşman sersemler, ekran kısa süre yavaşlar. Yuvarlanma (Shift / ok butonu) 0,22 sn dokunulmazlık verir.
+- **Saldırı türleri:** Normal, ağır (turuncu uyarı), engellenemez (kırmızı uyarı). İblisin alan vuruşu engellenemez.
+- **Denge (poise):** Düşmanlar yeterince hasar alınca sersemler ve 1,5 kat hasar alır.
+- **Diyalog ve görevler:** `Dialogue` ve `Quests` autoload'ları. Veriler `data/dialogue.json` ve `data/quests.json` dosyalarında, koşullar `GameConditions` ile değerlendiriliyor. NPC üstünde `!` yeni görev, `?` teslim edilecek görev demek.
+- **Crafting:** Otlar yerden toplanıyor, tarifler `data/recipes.json` dosyasında, Mira'da simya.
+- **Boss altyapısı:** `Boss` (Enemy'den türer) + `BossAttack` verileri + `BossArena`. İlk boss Fenris, şimdilik büyütülmüş iblis görseliyle yer tutucu.
+- **Kül Kalkanı:** Şehrin kuzeyinde. 9 parça Ezra'ya teslim edilince `barrier_broken` bayrağıyla kırılır.
+- **Ders:** Oyuncu haritalar arasında taşınırken fizik motoru onu bir kare eski konumunda görüyor ve yeni haritadaki alanlar yanlışlıkla tetiklenebiliyor. Bu yüzden harita değişiminden sonra çarpışma 2 fizik karesi boyunca kapalı kalıyor (`Player.prepare_for_map_change`).
+- **Ders:** Godot'da "yeni basıldı" bilgisi (`is_action_just_pressed`) sadece basıldığı karede geçerli. Testlerde basışın karenin başında yapılması gerekiyor.
+- **Ders:** Paket fontunda olmayan karakterler (★ ✔ •) görünmez. Sadece Latin-1 ve eklediğimiz Türkçe harfler kullanılmalı.
+
 ## 2026-10-05 — Arayüz, mana, yetenek ve özel saldırılar
 - UI: Pixel Bars (can/mana barları, düşman ince barları) ve Pixel UI Fantasy (parşömen teması, envanter) eklenti olarak `addons/` altına kuruldu. Eşya ikonları Woshi paketinden.
 - Paket fontlarında ı İ ş Ş ğ Ğ yoktu; `tools/make_turkish_font.gd` bunları fontun kendi harflerinden türetiyor.

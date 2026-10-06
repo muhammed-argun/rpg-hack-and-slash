@@ -1,0 +1,97 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_y3lfa"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_3n44w"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/orc.tscn" id="3_esqy4"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="4_uq8ut"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="5_l01tp"]
+
+[sub_resource type="Resource" id="Resource_jvlt0"]
+script = ExtResource("2_3n44w")
+type = 5
+weight = 3.0
+damage = 10
+min_range = 30.0
+max_range = 220.0
+windup = 0.5
+
+[sub_resource type="Resource" id="Resource_gv8yb"]
+script = ExtResource("2_3n44w")
+type = 4
+damage = 0
+max_range = 300.0
+recovery = 2.5
+windup = 0.8
+summon_scene = ExtResource("3_esqy4")
+summon_count = 3
+
+[sub_resource type="Resource" id="Resource_boti0"]
+script = ExtResource("2_3n44w")
+type = 7
+kind = 2
+weight = 1.5
+damage = 18
+max_range = 260.0
+recovery = 1.2
+radius = 22.0
+windup = 0.8
+count = 1
+
+[sub_resource type="Resource" id="Resource_c7q7v"]
+script = ExtResource("2_3n44w")
+type = 6
+min_phase = 2
+weight = 2.0
+damage = 0
+max_range = 50.0
+recovery = 0.4
+teleport_distance = 120.0
+
+[sub_resource type="Resource" id="Resource_5xb7v"]
+script = ExtResource("2_3n44w")
+type = 5
+min_phase = 2
+weight = 2.0
+damage = 9
+min_range = 30.0
+max_range = 260.0
+windup = 0.6
+count = 5
+spread = 60.0
+homing = 0.25
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bfelc"]
+radius = 9.0
+
+[node name="Morvane" type="CharacterBody2D" unique_id=1804746006]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_y3lfa")
+boss_id = "morvane"
+title_key = "BOSS_MORVANE_TITLE"
+attacks = Array[ExtResource("2_3n44w")]([SubResource("Resource_jvlt0"), SubResource("Resource_gv8yb"), SubResource("Resource_boti0"), SubResource("Resource_c7q7v"), SubResource("Resource_5xb7v")])
+name_key = "BOSS_MORVANE"
+max_hp = 520
+xp_reward = 170
+move_speed = 50.0
+attack_range = 24.0
+poise = 100.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1671625135]
+modulate = Color(0.7, 0.55, 1, 1)
+scale = Vector2(1.5, 1.5)
+script = ExtResource("4_uq8ut")
+sprite_folder = "res://assets/enemies/demon"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1342569756]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_bfelc")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1319463463]
+position = Vector2(0, -48)
+script = ExtResource("5_l01tp")

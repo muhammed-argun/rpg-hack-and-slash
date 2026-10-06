@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_1xni8"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_ovnj7"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="3_5yx27"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="4_xtl0x"]
+
+[sub_resource type="Resource" id="Resource_2pqj4"]
+script = ExtResource("2_ovnj7")
+kind = 1
+weight = 3.0
+damage = 28
+max_range = 34.0
+recovery = 1.2
+animation = "attack"
+
+[sub_resource type="Resource" id="Resource_3j3ex"]
+script = ExtResource("2_ovnj7")
+type = 2
+kind = 2
+weight = 1.5
+damage = 24
+max_range = 60.0
+recovery = 1.4
+radius = 64.0
+windup = 0.9
+
+[sub_resource type="Resource" id="Resource_5vm4j"]
+script = ExtResource("2_ovnj7")
+type = 3
+kind = 1
+damage = 20
+min_range = 60.0
+max_range = 180.0
+radius = 18.0
+windup = 0.6
+charge_distance = 150.0
+
+[sub_resource type="Resource" id="Resource_x2tgd"]
+script = ExtResource("2_ovnj7")
+kind = 1
+min_phase = 2
+weight = 3.0
+damage = 24
+max_range = 34.0
+recovery = 0.9
+animation = "attack"
+combo_hits = 2
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vr4cq"]
+radius = 12.6
+
+[node name="Bjorn" type="CharacterBody2D" unique_id=1884094678]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_1xni8")
+boss_id = "bjorn"
+title_key = "BOSS_BJORN_TITLE"
+attacks = Array[ExtResource("2_ovnj7")]([SubResource("Resource_2pqj4"), SubResource("Resource_3j3ex"), SubResource("Resource_5vm4j"), SubResource("Resource_x2tgd")])
+name_key = "BOSS_BJORN"
+max_hp = 760
+xp_reward = 230
+move_speed = 55.0
+attack_range = 28.0
+poise = 200.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=643082905]
+modulate = Color(0.45, 0.32, 0.25, 1)
+scale = Vector2(2.1, 2.1)
+script = ExtResource("3_5yx27")
+sprite_folder = "res://assets/enemies/orc"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=949770822]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_vr4cq")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1507576902]
+position = Vector2(0, -67.2)
+script = ExtResource("4_xtl0x")

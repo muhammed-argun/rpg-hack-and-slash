@@ -1,0 +1,18 @@
+{
+	"health_potion": {
+		"name": "RECIPE_HEALTH_POTION",
+		"icon": "res://assets/items/potion_health.png",
+		"requires": {"flag": "recipe_health_potion"},
+		"cost": {"bloodweed": 3},
+		"gold": 5,
+		"gives": {"health_potions": 1}
+	},
+	"mana_potion": {
+		"name": "RECIPE_MANA_POTION",
+		"icon": "res://assets/items/potion_mana.png",
+		"requires": {"flag": "recipe_mana_potion"},
+		"cost": {"moonlotus": 3},
+		"gold": 5,
+		"gives": {"mana_potions": 1}
+	}
+}

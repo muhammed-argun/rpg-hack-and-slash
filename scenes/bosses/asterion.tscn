@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_brhyh"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_sakq2"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="3_4y52n"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="4_h8m40"]
+
+[sub_resource type="Resource" id="Resource_2b3cr"]
+script = ExtResource("2_sakq2")
+type = 1
+kind = 1
+weight = 3.0
+damage = 22
+radius = 34.0
+offset = 18.0
+windup = 0.6
+
+[sub_resource type="Resource" id="Resource_n0p1r"]
+script = ExtResource("2_sakq2")
+type = 3
+kind = 2
+weight = 2.0
+damage = 26
+min_range = 60.0
+max_range = 220.0
+recovery = 1.6
+radius = 18.0
+charge_speed = 330.0
+charge_distance = 200.0
+
+[sub_resource type="Resource" id="Resource_w08wh"]
+script = ExtResource("2_sakq2")
+type = 8
+weight = 1.5
+damage = 18
+min_range = 20.0
+max_range = 200.0
+radius = 12.0
+windup = 0.6
+length = 180.0
+
+[sub_resource type="Resource" id="Resource_1bthj"]
+script = ExtResource("2_sakq2")
+type = 3
+kind = 2
+min_phase = 2
+weight = 3.0
+damage = 26
+min_range = 60.0
+max_range = 220.0
+radius = 18.0
+windup = 0.45
+charge_speed = 360.0
+charge_distance = 220.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_q8xys"]
+radius = 12.0
+
+[node name="Asterion" type="CharacterBody2D" unique_id=1420468126]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_brhyh")
+boss_id = "asterion"
+title_key = "BOSS_ASTERION_TITLE"
+attacks = Array[ExtResource("2_sakq2")]([SubResource("Resource_2b3cr"), SubResource("Resource_n0p1r"), SubResource("Resource_w08wh"), SubResource("Resource_1bthj")])
+name_key = "BOSS_ASTERION"
+max_hp = 640
+xp_reward = 190
+move_speed = 55.0
+attack_range = 30.0
+poise = 160.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=234445547]
+modulate = Color(0.75, 0.5, 0.35, 1)
+scale = Vector2(2, 2)
+script = ExtResource("3_4y52n")
+sprite_folder = "res://assets/enemies/orc"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=724353333]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_q8xys")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=452952364]
+position = Vector2(0, -64)
+script = ExtResource("4_h8m40")

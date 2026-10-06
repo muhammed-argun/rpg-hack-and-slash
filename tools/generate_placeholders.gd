@@ -23,6 +23,7 @@ func _init() -> void:
 	_make_chest()
 	_make_tileset()
 	_make_ui()
+	_make_items()
 	print("Yer tutucu görseller: %d yeni dosya oluşturuldu." % _created)
 	quit()
 
@@ -192,6 +193,45 @@ func _make_ui() -> void:
 	_draw_circle(potion, Vector2(14, 16), 6.0, Color(0.9, 0.2, 0.3))
 	_rect(potion, Rect2i(12, 6, 4, 5), Color(0.85, 0.85, 0.9))
 	_save_if_missing("res://assets/ui/button_potion.png", potion)
+
+	var pause := _new_image(16, 16)
+	_rect(pause, Rect2i(3, 2, 4, 12), OUTLINE)
+	_rect(pause, Rect2i(9, 2, 4, 12), OUTLINE)
+	_rect(pause, Rect2i(4, 3, 2, 10), Color(0.95, 0.9, 0.8))
+	_rect(pause, Rect2i(10, 3, 2, 10), Color(0.95, 0.9, 0.8))
+	_save_if_missing("res://assets/ui/icon_pause.png", pause)
+
+
+# --- Toplanabilir eşyalar ----------------------------------------------------
+
+func _make_items() -> void:
+	_save_if_missing("res://assets/items/herb_red.png", _herb(Color(0.85, 0.15, 0.2)))
+	_save_if_missing("res://assets/items/herb_blue.png", _herb(Color(0.35, 0.55, 1.0)))
+	var necklace := _new_image(FRAME, FRAME)
+	for i in 14:
+		var angle := PI * 0.15 + PI * 0.7 * i / 13.0
+		_px(necklace, Vector2(16, 8) + Vector2(cos(angle), sin(angle)) * 9.0, Color(0.95, 0.85, 0.4))
+	_draw_circle(necklace, Vector2(16, 20), 4.0, OUTLINE)
+	_draw_circle(necklace, Vector2(16, 20), 3.0, Color(0.4, 0.8, 1.0))
+	_px(necklace, Vector2(15, 19), Color.WHITE)
+	_save_if_missing("res://assets/items/necklace.png", necklace)
+
+
+# Yapraklı bir ot ve üstünde renkli çiçekler
+func _herb(flower: Color) -> Image:
+	var img := _new_image(FRAME, FRAME)
+	var leaf := Color(0.2, 0.5, 0.22)
+	for stem in [Vector2(12, 0), Vector2(16, 0), Vector2(20, 0)]:
+		for y in range(14, 29):
+			_px(img, Vector2(stem.x + (y % 3 - 1) * 0.0, y), leaf.darkened(0.2))
+	for p in [Vector2(10, 22), Vector2(22, 21), Vector2(13, 18), Vector2(19, 17)]:
+		_draw_circle(img, p, 3.0, OUTLINE)
+		_draw_circle(img, p, 2.2, leaf)
+	for c in [Vector2(12, 12), Vector2(16, 10), Vector2(20, 12)]:
+		_draw_circle(img, c, 3.0, OUTLINE)
+		_draw_circle(img, c, 2.2, flower)
+		_px(img, c, flower.lightened(0.5))
+	return img
 
 
 # --- Çizim yardımcıları ----------------------------------------------------

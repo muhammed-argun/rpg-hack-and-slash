@@ -28,14 +28,20 @@ Bu dosya her Claude oturumunun başında otomatik okunur. Kalıcı kurallar ve k
 - `scenes/` sahneler: `main.tscn` (ana sahne), `maps/`, `player/`, `enemies/`, `objects/`, `world/`, `ui/`
 - `scripts/` scriptler, sahnelerle aynı alt klasör düzeninde; `autoload/game_state.gd` = GameState
 - `tools/` geliştirme araçları (oyuna dahil değil)
-- `docs/` belgeler; dış kaynaklı asset'ler `docs/credits.md` dosyasına işlenir
+- `docs/` belgeler; dış kaynaklı asset'ler `docs/credits.md` dosyasına işlenir. Hikâye: `docs/story.md`, boss'lar: `docs/bosses.md`, yol haritası: `docs/roadmap.md`, indirilecekler: `docs/downloads.md`
+- `data/` oyun verileri: `quests.json`, `dialogue.json`, `recipes.json`, `audio.json`, `translations/*.csv` (TR/EN). `export_presets.cfg` dosyası `data/*.json` dosyalarını dışa aktarmaya dahil ediyor
 - `ReadyAssetSets/` indirilen ham asset paketleri (`.gdignore` ile Godot'dan gizli)
 - `addons/pixel_bars`, `addons/pixel_ui_fantasy` hazır UI eklentileri (dokunulmaz; değişiklikler `assets/ui/` altındaki kopyalarda yapılır)
 - `assets/ui/game_theme.tres` oyunun genel teması (parşömen teması + Türkçe font + `HudLabel` varyasyonu); `assets/fonts/quill_tr.*` Türkçe harfli font
 
 ## Mimari
 - `Main` haritaları yükler; oyuncu tek bir instance olarak haritalar arasında taşınır
-- Haritalar arası korunan durum (can, altın, iksir, ekipman) `GameState` autoload'unda tutulur
+- Autoload'lar: `Settings` (dil, ses, titreşim), `Quests` (görevler), `Dialogue` (NPC konuşmaları), `Audio` (efekt ve müzik, `data/audio.json`), `GameState` (oyuncu durumu, kayıt/yükleme)
+- Yeni oyun `scenes/maps/prologue.tscn` haritasında başlar; ölünce `town.tscn` haritasında doğulur
+- Haritalar arası korunan durum (can, mana, stamina, altın, iksir, malzeme, parça, bayraklar) `GameState` autoload'unda tutulur
+- Tüm oyuncuya görünen metinler çeviri anahtarıdır; yeni metin eklerken `data/translations/*.csv` dosyasına TR ve EN birlikte eklenir
+- Ana sahne `scenes/main_menu.tscn`; oyun `scenes/main.tscn`. Düşman saldırıları `Player.take_damage(miktar, kaynak, Combat.Kind)` ile verilir
+- Boss'lar `Boss` + `BossAttack` verisi + `BossArena`; yeni boss çoğunlukla veri girmektir (bkz. `docs/bosses.md`)
 - Karakter görselleri `CharacterSprite` ile klasörden isimlendirme kuralına göre yüklenir; görsel eklemek kod değişikliği gerektirmez
 - Dokunmatik kontroller ve klavye aynı Input Map aksiyonlarını kullanır: `move_left/right/up/down`, `attack`, `skill`, `use_potion`, `use_mana_potion`, `toggle_inventory`
 - Dokunmatik butonlar `ActionButton` (TouchScreenButton tabanlı, çoklu dokunma için); normal `Button` yalnızca ilk parmağı algıladığı için oyun içi kontrollerde kullanılmaz
@@ -47,13 +53,15 @@ Bu dosya her Claude oturumunun başında otomatik okunur. Kalıcı kurallar ve k
 
 ## Araçlar ve Test
 Godot: `E:\GodotSetup\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
-- Duman testi (oyunu otomatik oynar, sonucu yazar): `godot --path . res://tools/smoke_test.tscn`
+- Duman testi (oyunu otomatik oynar, sonucu yazar): `godot --path . res://tools/smoke_test.tscn --quit-after 20000`. Test kendi kayıt dosyasını kullanır (`user://save_smoke_test.json`)
 - Eksik yer tutucu görselleri üret: `godot --headless --path . --script res://tools/generate_placeholders.gd`
 - Tiny RPG paketini karelere böl: `godot --headless --path . --script res://tools/import_tiny_rpg_pack.gd`  (paket klasörü farklıysa sonuna `-- --pack-root="res://Klasör"`)
 - Türkçe fontu yeniden üret: `godot --headless --path . --script res://tools/make_turkish_font.gd`
 - Duman testini takılmaya karşı süre sınırıyla çalıştır: sonuna `--quit-after 5000` ekle
 - Not: Yeni addon/tema eklendikten sonraki ilk `--import` doku yükleme hataları verebilir; ikinci çalıştırma temiz olmalı
 - Demo haritalarını üret (var olanların üzerine yazmaz): `godot --headless --path . res://tools/build_demo_maps.tscn`
+- Boss sahnelerini üret (var olanların üzerine yazmaz): `godot --headless --path . res://tools/build_bosses.tscn`
+- Boss dene: `godot --path . res://tools/boss_test.tscn -- --boss=fenris`; hepsini otomatik dene: `... --quit-after 50000 -- --all`
 - Script değişikliğinden sonra hata kontrolü: `godot --headless --path . --import`
 - Not: `--script` modunda autoload'lar yüklenmez. Oyun scriptlerini kullanan araçlar sahne olarak çalıştırılır.
 

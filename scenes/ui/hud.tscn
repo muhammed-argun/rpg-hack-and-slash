@@ -14,6 +14,15 @@
 [ext_resource type="Texture2D" path="res://assets/items/potion_mana.png" id="12_mp_potion"]
 [ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/chest.png" id="13_bag"]
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory_window.tscn" id="14_inventory"]
+[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/shield.png" id="15_shield"]
+[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/arrow_right.png" id="16_dodge"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_pause.png" id="17_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_box.tscn" id="18_dialogue"]
+[ext_resource type="Script" path="res://scripts/ui/crafting_window.gd" id="19_crafting"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="20_pause"]
+[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/quest.png" id="21_quest"]
+[ext_resource type="Script" path="res://scripts/ui/shop_window.gd" id="22_shop"]
+[ext_resource type="Script" path="res://scripts/ui/smith_window.gd" id="23_smith"]
 
 [node name="HUD" type="CanvasLayer"]
 process_mode = 3
@@ -32,11 +41,11 @@ theme = ExtResource("2_theme")
 [node name="Status" type="VBoxContainer" parent="Root"]
 layout_mode = 0
 offset_left = 6.0
-offset_top = 6.0
-offset_right = 150.0
-offset_bottom = 34.0
+offset_top = 5.0
+offset_right = 160.0
+offset_bottom = 45.0
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 1
 
 [node name="HPRow" type="HBoxContainer" parent="Root/Status"]
 layout_mode = 2
@@ -78,14 +87,98 @@ layout_mode = 2
 theme_type_variation = &"HudLabel"
 text = "60/60"
 
+[node name="StaminaRow" type="HBoxContainer" parent="Root/Status"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StaminaBar" type="TextureProgressBar" parent="Root/Status/StaminaRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 7)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("3_pixel_bar")
+shape = 1
+fill = "stamina"
+
+[node name="LevelLabel" type="Label" parent="Root/Status/StaminaRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+text = "Sv 1"
+
+[node name="XPBar" type="ProgressBar" parent="Root/Status/StaminaRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 8)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"GoldBar"
+show_percentage = false
+
+[node name="QuestTracker" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 6.0
+offset_top = 52.0
+offset_right = 170.0
+offset_bottom = 84.0
+theme_override_constants/separation = 0
+
+[node name="QuestTitle" type="Label" parent="Root/QuestTracker"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+theme_override_colors/font_color = Color(1, 0.82, 0.45, 1)
+text = "Görev"
+
+[node name="QuestObjective" type="Label" parent="Root/QuestTracker"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "Hedef"
+
+[node name="BossBar" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -72.0
+offset_top = 4.0
+offset_right = 92.0
+offset_bottom = 36.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="BossHealth" type="TextureProgressBar" parent="Root/BossBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(164, 16)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_pixel_bar")
+shape = 3
+segments = 4
+
+[node name="BossName" type="Label" parent="Root/BossBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+text = "Boss"
+
 [node name="Purse" type="PanelContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -72.0
+offset_left = -96.0
 offset_top = 4.0
-offset_right = -4.0
+offset_right = -30.0
 offset_bottom = 26.0
 grow_horizontal = 0
 mouse_filter = 2
@@ -108,6 +201,20 @@ size_flags_horizontal = 3
 horizontal_alignment = 2
 text = "0"
 
+[node name="PauseButton" parent="Root" instance=ExtResource("8_button")]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -28.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = 27.0
+grow_horizontal = 0
+action = "pause"
+icon = ExtResource("17_pause")
+
 [node name="BagButton" parent="Root" instance=ExtResource("8_button")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 28)
@@ -123,6 +230,20 @@ grow_horizontal = 0
 action = "toggle_inventory"
 icon = ExtResource("13_bag")
 
+[node name="QuestButton" parent="Root" instance=ExtResource("8_button")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -64.0
+offset_top = 30.0
+offset_right = -36.0
+offset_bottom = 58.0
+grow_horizontal = 0
+icon = ExtResource("21_quest")
+
 [node name="Messages" type="VBoxContainer" parent="Root"]
 unique_name_in_owner = true
 layout_mode = 1
@@ -130,12 +251,32 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -110.0
-offset_top = 36.0
+offset_top = 44.0
 offset_right = 110.0
-offset_bottom = 100.0
+offset_bottom = 108.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
+
+[node name="MapName" type="Label" parent="Root"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -60.0
+offset_right = 120.0
+offset_bottom = -47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"HudLabel"
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+horizontal_alignment = 1
+text = "Varneth"
 
 [node name="TouchJoystick" type="Control" parent="Root"]
 unique_name_in_owner = true
@@ -161,6 +302,7 @@ grow_vertical = 0
 mouse_filter = 2
 
 [node name="AttackButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 0
 offset_left = -56.0
@@ -172,13 +314,47 @@ icon = ExtResource("9_sword")
 icon_scale = 2
 frame_variation = &"SkillSlot"
 
+[node name="InteractPrompt" type="Label" parent="Root/ActionButtons/AttackButton"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 64.0
+offset_bottom = -2.0
+theme_type_variation = &"Nameplate"
+horizontal_alignment = 1
+text = "UI_TALK"
+
+[node name="DodgeButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 0
+offset_left = -100.0
+offset_top = -44.0
+offset_right = -64.0
+offset_bottom = -8.0
+action = "dodge"
+icon = ExtResource("16_dodge")
+icon_scale = 2
+
+[node name="BlockButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 0
+offset_left = -48.0
+offset_top = -100.0
+offset_right = -12.0
+offset_bottom = -64.0
+action = "block"
+icon = ExtResource("15_shield")
+icon_scale = 2
+
 [node name="SkillButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = -104.0
-offset_top = -48.0
-offset_right = -64.0
-offset_bottom = -8.0
+offset_left = -96.0
+offset_top = -92.0
+offset_right = -56.0
+offset_bottom = -52.0
 action = "skill"
 icon = ExtResource("10_skill")
 icon_scale = 2
@@ -188,22 +364,24 @@ count_color = Color(0.55, 0.75, 1, 1)
 
 [node name="HealthPotionButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 0
-offset_left = -52.0
-offset_top = -104.0
+offset_left = -48.0
+offset_top = -144.0
 offset_right = -12.0
-offset_bottom = -64.0
+offset_bottom = -108.0
 action = "use_potion"
 icon = ExtResource("11_hp_potion")
 show_count = true
 
 [node name="ManaPotionButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 0
-offset_left = -100.0
-offset_top = -96.0
-offset_right = -60.0
-offset_bottom = -56.0
+offset_left = -92.0
+offset_top = -136.0
+offset_right = -56.0
+offset_bottom = -100.0
 action = "use_mana_potion"
 icon = ExtResource("12_mp_potion")
 show_count = true
@@ -212,3 +390,48 @@ show_count = true
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+
+[node name="CraftingWindow" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -80.0
+offset_right = 130.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("19_crafting")
+
+[node name="ShopWindow" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+script = ExtResource("22_shop")
+
+[node name="SmithWindow" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+script = ExtResource("23_smith")
+
+[node name="DialogueBox" parent="Root" instance=ExtResource("18_dialogue")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="PauseMenu" type="Control" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("20_pause")

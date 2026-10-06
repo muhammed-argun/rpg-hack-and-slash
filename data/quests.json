@@ -1,0 +1,112 @@
+{
+	"q_main_arrival": {
+		"title": "Q_ARRIVAL_TITLE",
+		"desc": "Q_ARRIVAL_DESC",
+		"main": true,
+		"giver": "",
+		"turn_in": "",
+		"objectives": [
+			{"type": "reach", "target": "town", "count": 1, "text": "Q_ARRIVAL_OBJ_TOWN"},
+			{"type": "talk", "target": "ezra", "count": 1, "text": "Q_ARRIVAL_OBJ"}
+		]
+	},
+	"q_main_shards": {
+		"title": "Q_SHARDS_TITLE",
+		"desc": "Q_SHARDS_DESC",
+		"main": true,
+		"giver": "ezra",
+		"turn_in": "ezra",
+		"objectives": [
+			{"type": "shards", "count": 9, "text": "Q_SHARDS_OBJ"}
+		],
+		"rewards": {"flags": ["barrier_broken"]}
+	},
+	"q_main_fenris": {
+		"title": "Q_FENRIS_TITLE",
+		"desc": "Q_FENRIS_DESC",
+		"main": true,
+		"giver": "ezra",
+		"turn_in": "",
+		"objectives": [
+			{"type": "reach", "target": "ashwood_den", "count": 1, "text": "Q_FENRIS_OBJ_1"},
+			{"type": "boss", "target": "fenris", "count": 1, "text": "Q_FENRIS_OBJ_2"}
+		],
+		"rewards": {"gold": 120, "health_potions": 2}
+	},
+	"q_mira_herbs": {
+		"title": "Q_MIRA_HERBS_TITLE",
+		"desc": "Q_MIRA_HERBS_DESC",
+		"giver": "mira",
+		"turn_in": "mira",
+		"requires": {"quest": "q_main_arrival", "state": "done"},
+		"objectives": [
+			{"type": "collect", "target": "bloodweed", "count": 5, "consume": true, "text": "Q_MIRA_HERBS_OBJ"}
+		],
+		"rewards": {"health_potions": 2, "flags": ["recipe_health_potion"]}
+	},
+	"q_mira_lotus": {
+		"title": "Q_MIRA_LOTUS_TITLE",
+		"desc": "Q_MIRA_LOTUS_DESC",
+		"giver": "mira",
+		"turn_in": "mira",
+		"requires": {"quest": "q_mira_herbs", "state": "done"},
+		"objectives": [
+			{"type": "collect", "target": "moonlotus", "count": 3, "consume": true, "text": "Q_MIRA_LOTUS_OBJ"}
+		],
+		"rewards": {"mana_potions": 2, "flags": ["recipe_mana_potion"]}
+	},
+	"q_seren_orcs": {
+		"title": "Q_SEREN_ORCS_TITLE",
+		"desc": "Q_SEREN_ORCS_DESC",
+		"giver": "seren",
+		"turn_in": "seren",
+		"requires": {"quest": "q_main_arrival", "state": "done"},
+		"objectives": [
+			{"type": "kill", "target": "orc", "count": 4, "text": "Q_SEREN_ORCS_OBJ"}
+		],
+		"rewards": {"gold": 60, "mana_potions": 1}
+	},
+	"q_borak_ore": {
+		"title": "Q_BORAK_ORE_TITLE",
+		"desc": "Q_BORAK_ORE_DESC",
+		"giver": "borak",
+		"turn_in": "borak",
+		"requires": {"quest": "q_main_arrival", "state": "done"},
+		"objectives": [
+			{"type": "collect", "target": "iron_ore", "count": 3, "consume": true, "text": "Q_BORAK_ORE_OBJ"}
+		],
+		"rewards": {"gold": 80, "flags": ["smith_unlocked"]}
+	},
+	"q_pip_necklace": {
+		"title": "Q_PIP_TITLE",
+		"desc": "Q_PIP_DESC",
+		"giver": "pip",
+		"turn_in": "pip",
+		"objectives": [
+			{"type": "collect", "target": "pip_necklace", "count": 1, "consume": true, "text": "Q_PIP_OBJ"}
+		],
+		"rewards": {"health_potions": 1, "gold": 15, "flags": ["pip_happy"]}
+	},
+	"q_rurik_demons": {
+		"title": "Q_RURIK_DEMONS_TITLE",
+		"desc": "Q_RURIK_DEMONS_DESC",
+		"giver": "rurik",
+		"turn_in": "rurik",
+		"objectives": [
+			{"type": "kill", "target": "blood_monster", "count": 3, "text": "Q_RURIK_DEMONS_OBJ"}
+		],
+		"rewards": {"gold": 50, "mana_potions": 1},
+		"next": "q_rurik_trail"
+	},
+	"q_rurik_trail": {
+		"title": "Q_RURIK_TRAIL_TITLE",
+		"desc": "Q_RURIK_TRAIL_DESC",
+		"giver": "rurik",
+		"turn_in": "rurik",
+		"requires": {"quest": "q_rurik_demons", "state": "done"},
+		"objectives": [
+			{"type": "kill", "target": "demon", "count": 2, "text": "Q_RURIK_TRAIL_OBJ"}
+		],
+		"rewards": {"gold": 70, "materials": {"moonlotus": 2}, "flags": ["den_path_open"]}
+	}
+}

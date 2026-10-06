@@ -1,0 +1,89 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss.gd" id="1_l5v4j"]
+[ext_resource type="Script" path="res://scripts/bosses/boss_attack.gd" id="2_66s2e"]
+[ext_resource type="Script" path="res://scripts/components/character_sprite.gd" id="3_pedm1"]
+[ext_resource type="Script" path="res://scripts/components/health_bar_2d.gd" id="4_2fh8p"]
+
+[sub_resource type="Resource" id="Resource_alhhq"]
+script = ExtResource("2_66s2e")
+type = 1
+kind = 1
+weight = 3.0
+damage = 28
+max_range = 44.0
+recovery = 1.1
+radius = 38.0
+offset = 18.0
+
+[sub_resource type="Resource" id="Resource_umvb1"]
+script = ExtResource("2_66s2e")
+type = 2
+kind = 2
+weight = 1.5
+damage = 30
+max_range = 70.0
+recovery = 1.5
+radius = 80.0
+windup = 1.0
+
+[sub_resource type="Resource" id="Resource_m0ghp"]
+script = ExtResource("2_66s2e")
+type = 7
+weight = 2.0
+damage = 20
+max_range = 300.0
+radius = 22.0
+windup = 0.9
+count = 5
+spread = 80.0
+projectile_color = Color(1, 0.5, 0.2, 1)
+
+[sub_resource type="Resource" id="Resource_xd6bw"]
+script = ExtResource("2_66s2e")
+type = 7
+kind = 2
+min_phase = 2
+weight = 2.5
+damage = 22
+max_range = 300.0
+radius = 22.0
+windup = 0.8
+count = 8
+spread = 110.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uyxgt"]
+radius = 13.2
+
+[node name="Surtr" type="CharacterBody2D" unique_id=1367940529]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_l5v4j")
+boss_id = "surtr"
+title_key = "BOSS_SURTR_TITLE"
+attacks = Array[ExtResource("2_66s2e")]([SubResource("Resource_alhhq"), SubResource("Resource_umvb1"), SubResource("Resource_m0ghp"), SubResource("Resource_xd6bw")])
+name_key = "BOSS_SURTR"
+max_hp = 860
+xp_reward = 280
+move_speed = 45.0
+attack_range = 34.0
+poise = 220.0
+stun_time = 2.0
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=727497090]
+modulate = Color(1, 0.55, 0.25, 1)
+scale = Vector2(2.2, 2.2)
+script = ExtResource("3_pedm1")
+sprite_folder = "res://assets/enemies/orc"
+fps_overrides = {
+"idle": 8.0
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1524413751]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_uyxgt")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=116727711]
+position = Vector2(0, -70.4)
+script = ExtResource("4_2fh8p")

@@ -5,14 +5,22 @@ extends CharacterBody2D
 ## İsteğe bağlı bir özel saldırısı vardır ("special" animasyonu):
 ##   SLAM:   yerde uyarı alanı belirir, kısa bir hazırlıktan sonra alandaki oyuncuya vurur
 ##   CHARGE: hücum yolu gösterilir, sonra o yönde hızla atılır
+## Saldırı türleri (Combat.Kind): normal saldırılar bloklanabilir; özel saldırı ağır (turuncu) veya
+## engellenemez (kırmızı) olabilir. Parry'lenen ya da dengesi (poise) kırılan düşman sersemler.
 ## Yeni düşman türü için: mevcut bir düşman sahnesini kopyala, Sprite'ın sprite_folder'ını ve değerleri değiştir.
 
 signal died(enemy: Enemy)
 
-enum State { IDLE, CHASE, RETURN, ATTACK, SPECIAL, CHARGING, HURT, DEAD }
+enum State { IDLE, CHASE, RETURN, ATTACK, SPECIAL, CHARGING, HURT, STUNNED, DEAD }
 enum Special { NONE, SLAM, CHARGE }
 
+## Görevlerde kullanılan tür kimliği (ör. "orc"); data/quests.json'daki kill hedefleriyle eşleşir
+@export var enemy_id: String = ""
+## Ekranda gösterilen adın çeviri anahtarı
+@export var name_key: String = ""
 @export var max_hp: int = 40
+## Öldürülünce oyuncuya verilen deneyim
+@export var xp_reward: int = 10
 @export var damage: int = 8
 @export var move_speed: float = 60.0
 ## Oyuncuyu fark etme mesafesi (piksel)
@@ -24,9 +32,19 @@ enum Special { NONE, SLAM, CHARGE }
 ## Saldırı animasyonunun kaçıncı karesinde hasar verileceği (0'dan başlar)
 @export var attack_hit_frame: int = 2
 @export var knockback_force: float = 120.0
+@export var attack_kind: Combat.Kind = Combat.Kind.NORMAL
+
+@export_group("Denge (Poise)")
+## Bu kadar hasar birikince düşman sersemler; vuruş almadan poise_recover_delay geçerse sıfırlanır
+@export var poise: float = 30.0
+@export var poise_recover_delay: float = 2.5
+@export var stun_time: float = 1.5
+## Sersemlemiş düşmanın aldığı hasar katı
+@export var stunned_damage_multiplier: float = 1.5
 
 @export_group("Özel Saldırı")
 @export var special: Special = Special.NONE
+@export var special_kind: Combat.Kind = Combat.Kind.HEAVY
 @export var special_damage: int = 16
 @export var special_cooldown: float = 6.0
 ## Oyuncu bu mesafe aralığındayken özel saldırı denenir
@@ -58,6 +76,14 @@ var _special_center := Vector2.ZERO
 var _charge_direction := Vector2.ZERO
 var _charge_time := 0.0
 var _windup_held := false
+var _poise_damage := 0.0
+var _poise_timer := 0.0
+var _stun_timer := 0.0
+var _glow_tween: Tween
+# Sahnede verilen renk tonu (yanıp sönme bitince geri dönülür)
+var _base_modulate := Color.WHITE
+var _agent: NavigationAgent2D
+var _path_timer := 0.0
 
 @onready var sprite: CharacterSprite = $Sprite
 @onready var collision: CollisionShape2D = $CollisionShape2D
@@ -66,6 +92,12 @@ var _windup_held := false
 
 func _ready() -> void:
 	hp = max_hp
+	_base_modulate = sprite.modulate
+	_agent = NavigationAgent2D.new()
+	_agent.path_desired_distance = 6.0
+	_agent.target_desired_distance = 8.0
+	_agent.radius = 7.0
+	add_child(_agent)
 	_home = global_position
 	# Bölükteki düşmanlar özel saldırıyı aynı anda yapmasın
 	_special_cooldown = randf_range(1.5, special_cooldown)
@@ -81,6 +113,9 @@ func _physics_process(delta: float) -> void:
 		return
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_special_cooldown = maxf(0.0, _special_cooldown - delta)
+	_poise_timer -= delta
+	if _poise_timer <= 0.0:
+		_poise_damage = 0.0
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player") as Player
 
@@ -89,6 +124,11 @@ func _physics_process(delta: float) -> void:
 			_update_movement()
 		State.CHARGING:
 			_update_charge(delta)
+		State.STUNNED:
+			velocity = Vector2.ZERO
+			_stun_timer -= delta
+			if _stun_timer <= 0.0:
+				_end_stun()
 		_:
 			velocity = Vector2.ZERO
 
@@ -128,15 +168,32 @@ func _update_movement() -> void:
 		sprite.play_directional("idle", facing)
 		return
 
-	var direction := global_position.direction_to(target)
+	var direction := _direction_towards(target)
 	velocity = direction * move_speed
 	_face(direction)
 	sprite.play_directional("walk", facing)
 
 
-func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scale: float = 1.0) -> void:
+# Hedefe giden yolun bir sonraki noktasına doğru yön (engellerin etrafından dolaşır).
+# Navigasyon hazır değilse ya da yol bulunamazsa doğrudan hedefe yönelir.
+func _direction_towards(target: Vector2) -> Vector2:
+	_path_timer -= get_physics_process_delta_time()
+	if _path_timer <= 0.0 or _agent.target_position.distance_to(target) > 24.0:
+		_agent.target_position = target
+		_path_timer = 0.25
+	if NavigationServer2D.map_get_iteration_id(_agent.get_navigation_map()) == 0 or _agent.is_navigation_finished():
+		return global_position.direction_to(target)
+	var next := _agent.get_next_path_position()
+	if next.distance_to(global_position) < 0.5:
+		return global_position.direction_to(target)
+	return global_position.direction_to(next)
+
+
+func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scale: float = 1.0, poise_scale: float = 1.0) -> void:
 	if state == State.DEAD:
 		return
+	if state == State.STUNNED:
+		amount = roundi(amount * stunned_damage_multiplier)
 	hp -= amount
 	health_bar.set_ratio(float(hp) / max_hp)
 	var text := str(amount) + ("!" if crit else "")
@@ -144,6 +201,14 @@ func take_damage(amount: int, crit: bool, from_position: Vector2, knockback_scal
 	_flash()
 	if hp <= 0:
 		_die()
+		return
+	if state == State.STUNNED:
+		return
+	# Denge: yeterince hasar birikince sersemler (özel saldırı sırasında bile)
+	_poise_damage += amount * poise_scale
+	_poise_timer = poise_recover_delay
+	if _poise_damage >= poise:
+		stun()
 		return
 	# Özel saldırı sırasında düşman sendelemez ve geri savrulmaz
 	if state == State.SPECIAL or state == State.CHARGING:
@@ -169,7 +234,7 @@ func _start_attack() -> void:
 func _try_hit_player() -> void:
 	_hit_done = true
 	if _distance_to_player() <= attack_range * 1.5:
-		_player.take_damage(damage)
+		_player.take_damage(damage, self, attack_kind)
 
 
 # --- Özel saldırı ----------------------------------------------------------
@@ -190,12 +255,14 @@ func _start_special() -> void:
 	match special:
 		Special.SLAM:
 			_special_center = global_position + forward * special_offset + Vector2(0, -2)
-			_telegraph = AreaTelegraph.circle(_special_center, special_radius, warn_time)
+			_telegraph = AreaTelegraph.circle(_special_center, special_radius, warn_time, special_kind)
 		Special.CHARGE:
 			_charge_direction = global_position.direction_to(_player.global_position)
 			_face(_charge_direction)
 			var end := global_position + _charge_direction * charge_distance
-			_telegraph = AreaTelegraph.line(global_position, end, special_radius * 2.0, warn_time)
+			_telegraph = AreaTelegraph.line(global_position, end, special_radius * 2.0, warn_time, special_kind)
+	_start_glow(Combat.KIND_COLORS[special_kind])
+	Audio.play_sfx("telegraph")
 	sprite.play_directional("special", facing, true)
 	if not sprite.has_directional("special"):
 		# Görsel yoksa yalnızca hazırlık süresi kadar bekle
@@ -231,16 +298,18 @@ func _release_windup() -> void:
 
 func _special_hit() -> void:
 	_hit_done = true
+	_stop_glow()
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.detonate()
 		_telegraph = null
 	match special:
 		Special.SLAM:
 			Shockwave.spawn(_special_center, special_radius, Color(1.0, 0.45, 0.35))
+			Audio.play_sfx("enemy_slam")
 			if _player and _player.state != Player.State.DEAD and _player.is_inside_tree() \
 					and _player.global_position.distance_to(_special_center) <= special_radius:
-				_player.take_damage(special_damage)
-				_player.shake(2.0, 0.2)
+				if _player.take_damage(special_damage, self, special_kind) == Combat.Result.HIT:
+					_player.shake(2.0, 0.2)
 			if not sprite.has_directional("special"):
 				state = State.CHASE
 		Special.CHARGE:
@@ -254,17 +323,61 @@ func _update_charge(delta: float) -> void:
 	# Hücum sırasında oyuncuya bir kez çarpabilir
 	if not _hit_done and _distance_to_player() <= special_radius:
 		_hit_done = true
-		_player.take_damage(special_damage)
-		_player.shake(1.5, 0.15)
+		if _player.take_damage(special_damage, self, special_kind) == Combat.Result.HIT:
+			_player.shake(1.5, 0.15)
 	if _charge_time <= 0.0:
 		velocity = Vector2.ZERO
 		state = State.CHASE
 
 
 func _cancel_special() -> void:
+	_stop_glow()
 	if _telegraph and is_instance_valid(_telegraph):
 		_telegraph.queue_free()
 	_telegraph = null
+
+
+# --- Parry ve sersemleme -----------------------------------------------------
+
+## Oyuncu bu düşmanın saldırısını parry'leyince çağrılır.
+func on_parried() -> void:
+	if state != State.DEAD:
+		stun()
+
+
+## Düşmanı stun_time saniye sersemletir; bu sürede daha fazla hasar alır.
+func stun() -> void:
+	if state == State.DEAD:
+		return
+	_cancel_special()
+	state = State.STUNNED
+	_stun_timer = stun_time
+	_poise_damage = 0.0
+	velocity = Vector2.ZERO
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -38), tr("MSG_STAGGER"), Color(1.0, 0.85, 0.3))
+	sprite.play_directional("hurt" if sprite.has_directional("hurt") else "idle", facing, true)
+	# Sersemlemiş düşman sarımsı yanıp söner
+	_start_glow(Color(1.0, 0.95, 0.4), 0.25)
+
+
+func _end_stun() -> void:
+	_stop_glow()
+	state = State.CHASE
+
+
+# Özel saldırı hazırlığında ya da sersemlemede düşman renkli yanıp söner
+func _start_glow(color: Color, period: float = 0.15) -> void:
+	_stop_glow()
+	_glow_tween = sprite.create_tween().set_loops()
+	_glow_tween.tween_property(sprite, "modulate", color.lightened(0.3), period)
+	_glow_tween.tween_property(sprite, "modulate", _base_modulate, period)
+
+
+func _stop_glow() -> void:
+	if _glow_tween:
+		_glow_tween.kill()
+		_glow_tween = null
+	sprite.modulate = _base_modulate
 
 
 # --- Ölüm ve yardımcılar ---------------------------------------------------
@@ -276,6 +389,10 @@ func _die() -> void:
 	collision.set_deferred("disabled", true)
 	health_bar.hide()
 	died.emit(self)
+	Audio.play_sfx("enemy_death")
+	GameState.add_xp(xp_reward)
+	if not enemy_id.is_empty():
+		Quests.notify("kill", enemy_id)
 	if sprite.has_directional("death"):
 		sprite.play_directional("death", facing, true)
 	else:

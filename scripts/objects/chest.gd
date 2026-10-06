@@ -41,6 +41,7 @@ func _on_body_entered(body: Node2D) -> void:
 func _open() -> void:
 	_opened = true
 	_set_texture(TEXTURE_OPEN)
+	Audio.play_sfx("chest_open")
 	GameState.add_gold(randi_range(gold_min, gold_max) * loot_level)
 	if randf() < health_potion_chance:
 		GameState.add_health_potions(1)

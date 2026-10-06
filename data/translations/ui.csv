@@ -1,0 +1,155 @@
+keys,tr,en
+GAME_TITLE,Kül Prensi,Prince of Ash
+GAME_SUBTITLE,Eldmar'ın Son Umudu,The Last Hope of Eldmar
+UI_CONTINUE,Devam Et,Continue
+UI_NEW_GAME,Yeni Oyun,New Game
+UI_SETTINGS,Ayarlar,Settings
+UI_QUIT,Çıkış,Quit
+UI_QUIT_CONFIRM,Oyundan çıkmak istediğine emin misin?,Are you sure you want to quit?
+UI_NEW_GAME_CONFIRM,Kayıtlı oyunun silinecek. Emin misin?,Your saved game will be deleted. Are you sure?
+UI_MAIN_MENU_CONFIRM,İlerlemen kaydedilip ana menüye dönülecek.,Your progress will be saved and you will return to the main menu.
+UI_YES,Evet,Yes
+UI_NO,Hayır,No
+UI_OK,Tamam,OK
+UI_BACK,Geri,Back
+UI_CLOSE,Kapat,Close
+UI_USE,Kullan,Use
+UI_LANGUAGE,Dil,Language
+UI_MUSIC,Müzik,Music
+UI_SFX,Efektler,Effects
+UI_VIBRATION,Titreşim,Vibration
+UI_PAUSED,Duraklatıldı,Paused
+UI_RESUME,Devam,Resume
+UI_MAIN_MENU,Ana Menü,Main Menu
+UI_INVENTORY,Envanter,Inventory
+UI_BAG,Çanta,Bag
+UI_GEAR,Ekipman,Gear
+UI_QUESTS,Görevler,Quests
+UI_COMING_SOON,Yakında,Coming soon
+UI_TAP_ITEM,Bir eşyaya dokun.,Tap an item.
+UI_TAP_QUEST,Bir göreve dokun.,Tap a quest.
+UI_NO_QUESTS,Henüz görevin yok.,You have no quests yet.
+UI_TALK,Konuş,Talk
+UI_CRAFT,Yap,Craft
+UI_ALCHEMY,Simya,Alchemy
+UI_RECIPE_NEEDS,Gerekenler,Requires
+UI_TAP_TO_CONTINUE,Devam etmek için dokun,Tap to continue
+UI_SHARDS,Kristal Parçaları,Crystal Shards
+UI_MATERIALS,Malzemeler,Materials
+UI_QUEST_ACTIVE,Devam ediyor,In progress
+UI_QUEST_READY,Teslim edilebilir,Ready to turn in
+UI_QUEST_DONE,Tamamlandı,Completed
+UI_REWARD,Ödül,Reward
+UI_LANG_TR,Türkçe,Türkçe
+UI_LANG_EN,English,English
+UI_CREDITS,Emeği Geçenler,Credits
+UI_VERSION,Sürüm %s,Version %s
+MSG_GOLD,+%d altın,+%d gold
+MSG_HEALTH_POTION,+%d can iksiri,+%d health potion
+MSG_MANA_POTION,+%d mana iksiri,+%d mana potion
+MSG_ADDED_TO_BAG,Çantaya eklendi: %s,Added to bag: %s
+MSG_EQUIPPED_WEAPON,Kuşanıldı: %s (+%d hasar),Equipped: %s (+%d damage)
+MSG_EQUIPPED_ARMOR,Kuşanıldı: %s (+%d savunma),Equipped: %s (+%d defense)
+MSG_RESPAWN,Şehirde yeniden doğdun,You awoke in the city
+MSG_NO_MANA,Yeterli mana yok,Not enough mana
+MSG_NO_STAMINA,Yeterli stamina yok,Not enough stamina
+MSG_HP_FULL,Canın zaten dolu,Your health is already full
+MSG_MP_FULL,Manan zaten dolu,Your mana is already full
+MSG_PARRY,PARRY!,PARRY!
+MSG_GUARD_BREAK,Savunma kırıldı!,Guard broken!
+MSG_STAGGER,Sersemledi!,Staggered!
+MSG_SAVED,Oyun kaydedildi,Game saved
+MSG_QUEST_STARTED,Yeni görev: %s,New quest: %s
+MSG_QUEST_READY,Görev hazır: %s,Quest ready: %s
+MSG_QUEST_DONE,Görev tamamlandı: %s,Quest completed: %s
+MSG_SHARD,Kristal Parçası alındı! (%d/%d),Crystal Shard obtained! (%d/%d)
+MSG_CRAFTED,Yapıldı: %s,Crafted: %s
+MSG_NOT_ENOUGH,Malzeme yetmiyor,Not enough materials
+MSG_PICKED,+%d %s,+%d %s
+MSG_BARRIER,Kül Kalkanı yolu kapatıyor. %d/%d parça gerekli.,The Ash Ward blocks the way. %d/%d shards required.
+MSG_BARRIER_BROKEN,Kül Kalkanı kırıldı!,The Ash Ward is broken!
+MSG_BOSS_DEFEATED,%s yenildi!,%s defeated!
+MSG_UNBLOCKABLE,Bu saldırı engellenemez!,This attack cannot be blocked!
+ITEM_HEALTH_POTION,Can İksiri,Health Potion
+ITEM_MANA_POTION,Mana İksiri,Mana Potion
+ITEM_HEALTH_POTION_DESC,Canın %%%d kadarını doldurur.,Restores %d%% of your health.
+ITEM_MANA_POTION_DESC,Mananın %%%d kadarını doldurur.,Restores %d%% of your mana.
+ITEM_VALUE_DESC,Değer: %d altın. Dükkânda satılabilir.,Value: %d gold. Can be sold at the shop.
+ITEM_RUBY,Yakut,Ruby
+ITEM_CRYSTAL,Kristal,Crystal
+ITEM_GOLD_INGOT,Altın Külçe,Gold Ingot
+ITEM_OLD_MAP,Eski Harita,Old Map
+ITEM_RUSTY_KEY,Paslı Anahtar,Rusty Key
+ITEM_SWORD,Kılıç,Sword
+ITEM_AXE,Balta,Axe
+ITEM_WARHAMMER,Savaş Çekici,Warhammer
+ITEM_LEATHER_ARMOR,Deri Zırh,Leather Armor
+ITEM_CHAIN_ARMOR,Zincir Zırh,Chain Armor
+ITEM_PLATE_ARMOR,Plaka Zırh,Plate Armor
+RARITY_COMMON,Sıradan,Common
+RARITY_MAGIC,Büyülü,Magic
+RARITY_RARE,Nadir,Rare
+RARITY_LEGENDARY,Efsanevi,Legendary
+MAT_BLOODWEED,Kanotu,Bloodweed
+MAT_BLOODWEED_DESC,Kırmızı yapraklı şifalı bir ot. Can iksirinin temeli.,A red-leaved healing herb. The base of health potions.
+MAT_MOONLOTUS,Ay Nilüferi,Moon Lotus
+MAT_MOONLOTUS_DESC,Gece açan mavi bir çiçek. Mana iksirinin temeli.,A blue flower that blooms at night. The base of mana potions.
+MAT_IRON_ORE,Demir Cevheri,Iron Ore
+MAT_IRON_ORE_DESC,Demirci Borak silah güçlendirmek için kullanır.,Borak the smith uses it to upgrade weapons.
+SHARD_NAME,Kristal Parçası,Crystal Shard
+SHARD_DESC,Şafak Kristali'nin bir parçası. Hafifçe sıcak.,A fragment of the Dawn Crystal. Faintly warm.
+SKILL_GROUND_SLAM,Yer Sarsıntısı,Ground Slam
+ENEMY_ORC,Ork,Orc
+ENEMY_DEMON,İblis,Demon
+ENEMY_BLOOD_MONSTER,Kan Canavarı,Blood Monster
+ENEMY_GOBLIN,Goblin,Goblin
+ENEMY_WOLF,Kurt,Wolf
+MAP_TOWN,Varneth,Varneth
+MAP_WILD,Kül Ormanı Eteği,Ashwood Outskirts
+MAP_ASHWOOD_DEN,Kurt İni,The Wolf's Den
+BOSS_FENRIS,Fenris,Fenris
+BOSS_FENRIS_TITLE,Kül Kurdu,The Ash Wolf
+BARRIER_NAME,Kül Kalkanı,The Ash Ward
+MSG_LEVEL_UP,Seviye atladın! (Seviye %d),Level up! (Level %d)
+MSG_NOT_ENOUGH_GOLD,Altın yetmiyor,Not enough gold
+MSG_WEAPON_UPGRADED,Silahın güçlendi! (+%d),Your weapon grows stronger! (+%d)
+MSG_SOLD,Satıldı: +%d altın,Sold: +%d gold
+UI_SHOP,Dükkân,Shop
+UI_BUY,Al,Buy
+UI_SELL,Sat,Sell
+UI_SELL_ALL,Hepsini Sat,Sell All
+UI_SMITH,Demirci,Blacksmith
+UI_UPGRADE,Güçlendir,Upgrade
+UI_WEAPON_LEVEL,Silah seviyesi: +%d,Weapon level: +%d
+UI_WEAPON_DAMAGE,Hasar: %d,Damage: %d
+UI_MAX_LEVEL,En yüksek seviyede,At maximum level
+UI_LEVEL_SHORT,Sv %d,Lv %d
+UI_NOTHING_TO_SELL,Satacak bir şeyin yok.,You have nothing to sell.
+UI_PRICE,%d altın,%d gold
+BOSS_MORVANE,Morvane,Morvane
+BOSS_MORVANE_TITLE,Mezar Bekçisi,The Grave Warden
+BOSS_ASTERION,Asterion,Asterion
+BOSS_ASTERION_TITLE,Labirentin Efendisi,Lord of the Labyrinth
+BOSS_GOZCU,Gözcü,The Watcher
+BOSS_GOZCU_TITLE,Bataklığın Uykusuz Gözü,The Sleepless Eye of the Fen
+BOSS_BJORN,Bjorn,Bjorn
+BOSS_BJORN_TITLE,Dağın Kara Ayısı,Black Bear of the Mountain
+BOSS_VELZARA,Velzara,Velzara
+BOSS_VELZARA_TITLE,Kızıl Rahibe,The Crimson Priestess
+BOSS_SURTR,Surtr,Surtr
+BOSS_SURTR_TITLE,Kül Devi,The Ash Giant
+BOSS_CORVIN,Sir Corvin,Sir Corvin
+BOSS_CORVIN_TITLE,Düşmüş Şampiyon,The Fallen Champion
+BOSS_AZGOROTH,Azgoroth,Azgoroth
+BOSS_AZGOROTH_TITLE,Kül Tarikatının Efendisi,Master of the Ash Cult
+BOSS_ALDRIC,Kral Aldric,King Aldric
+BOSS_ALDRIC_TITLE,Yozlaşmış Taç,The Corrupted Crown
+BOSS_MALPHAS,Malphas,Malphas
+BOSS_MALPHAS_TITLE,Kül Prensi,The Prince of Ash
+HINT_MOVE,"Sol taraftaki joystick ile yürü.","Use the joystick on the left to walk."
+HINT_TALK,"! işaretli kişilerin görevi var. Yanına git ve saldırı butonuyla konuş.","People marked with ! have a quest. Walk up to them and press the attack button to talk."
+HINT_ATTACK,"Saldırı butonunu basılı tut: durmadan saldırırsın.","Hold the attack button to keep attacking."
+HINT_BLOCK,"Kalkan butonu: basılı tutarsan bloklarsın. Vuruştan hemen önce basarsan PARRY yaparsın!","Shield button: hold to block. Press it right before a hit to PARRY!"
+HINT_DODGE,"Ok butonu: yuvarlan. Kırmızı uyarılardan sadece yuvarlanarak kaçabilirsin.","Arrow button: roll. Red warnings can only be escaped by rolling."
+HINT_SKILL,"Yetenek butonu çevrendeki bütün düşmanlara vurur ve mana harcar.","The skill button strikes every enemy around you and costs mana."
+MAP_PROLOGUE,Varneth Yolu,Road to Varneth

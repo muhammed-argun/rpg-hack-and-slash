@@ -5,6 +5,8 @@ extends Control
 ## Dokunma için TouchScreenButton kullanılır; böylece joystick tutulurken de basılabilir
 ## (normal Button yalnızca ilk parmağı algılar).
 
+signal pressed
+
 @export var action: String = ""
 @export var icon: Texture2D:
 	set(value):
@@ -99,6 +101,7 @@ func _draw_cooldown() -> void:
 
 func _on_pressed() -> void:
 	modulate = Color(0.75, 0.75, 0.75)
+	pressed.emit()
 
 
 func _on_released() -> void:
