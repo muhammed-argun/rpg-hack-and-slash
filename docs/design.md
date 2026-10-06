@@ -1,84 +1,85 @@
 # Oyun Tasarımı
 
-Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı · **[Açık]** karar bekliyor
+Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı · **[Açık]** karar bekliyor · **[Yapılacak]** kararlaştırıldı ama henüz kodlanmadı
 
-## Genel Bakış
-- **[Karar]** Telefonda oynanan, Diablo benzeri 2D hack and slash RPG (Android)
-- **[Karar]** Görsel stil: pixel art
-- **[Karar]** Kamera açısı: Stardew Valley gibi üstten 3/4 görünüm
-- **[Öneri]** Ekran yönü: yatay (landscape)
-- **[Öneri]** Temel çözünürlük 480×270. Telefonlarda tam sayı katlarıyla (1080p'de 4×) büyütülür, böylece pikseller keskin kalır. Geniş ekranlı telefonlarda görüş yatayda genişler.
+## Genel bakış
+- **[Karar]** 2D pixel art hack and slash RPG. Diablo'nun loot ve ilerleme sistemi, Hades'in savaş hissi.
+- **[Karar]** Platform: **PC (Windows) öncelikli, Steam Deck ve gamepad destekli.** Mobil (Android) ileride port olarak gelebilir. (2026-10-06 kararı; proje mobil olarak başlamıştı.)
+- **[Karar]** Oyun adı (öneri olarak kullanılıyor): "Kül Prensi / Prince of Ash". **[Açık]** Kullanıcı isimleri onaylamadı.
+- **[Karar]** Ton: karanlık fantastik, dram var ama vahşet yok. Ayrıntı: `story.md`.
+- **[Karar]** Kamera: üstten 3/4 görünüm (Stardew Valley gibi), oyuncuyu takip eder.
+- **[Karar]** Çözünürlük: temel 480×270, tam sayı ölçekleme (1080p'de 4 kat, 4K'da 8 kat). Pikseller keskin kalır.
+- **[Karar]** Diller: Türkçe ve İngilizce, ayarlardan değişir.
 
-## Grafik Üretimi
-- **[Öneri]** Grafikler gelene kadar yer tutucu (placeholder) görseller ya da ücretsiz bir asset paketi kullanılır. Kod grafiklere bağlı olmadan yazılır.
-- **[Öneri]** Yapay zekâ konsept tasarım, eşya ikonları ve portreler için kullanılır. Tile ve animasyonlu karakterlerde yapay zekâ çıktısı elle temizlenir ya da asset paketlerinden yararlanılır.
-- **[Karar]** Karakterler yandan görünür, yalnızca sağa bakan kareler çizilir. Sol yön, sağ yönün aynalanmasıyla elde edilir. Aşağı/yukarı yön yoktur.
+## Kontroller (PC)
+- **[Yapılacak]** Hareket: WASD (gamepad: sol çubuk)
+- **[Yapılacak]** **Hades tarzı nişan:** Saldırı imlecin gösterdiği yöne yapılır. Karakter imlecin bulunduğu yana döner. Gamepad'de nişan sağ çubukla alınır. İleride menzilli silahlar ve büyüler de aynı nişanı kullanacak.
+- **[Yapılacak]** Sol tık: saldırı (basılı tutunca sürekli)
+- **[Yapılacak]** Yetenekler: E, R, T (3 aktif yuva)
+- **[Yapılacak]** Hızlı kullanım: 1 ve 2. Hangi eşyayı kullanacağı envanterdeki sıraya göre belirlenir (varsayılan: 1 = can iksiri, 2 = mana iksiri).
+- **[Yapılacak]** Blok/parry, yuvarlanma, etkileşim (F), envanter (I), karakter (C, aynı pencere), duraklatma (Esc)
+- **[Yapılacak]** Bütün tuşlar ayarlardan değiştirilebilir (klavye ve gamepad).
+- **[Yapılacak]** Özel imleç: Pixel UI Fantasy paketindeki cursor.
+- **[Karar]** Ekrandaki dokunmatik kontroller (joystick, butonlar) PC'de kaldırılacak; kodları mobil port için saklanıyor.
 
-## Dünya ve Haritalar
-- **[Karar]** Dünya, birbirine bağlı ayrı haritalardan oluşur. Her harita kendi sahnesidir.
-- **[Karar]** Haritalar sabit boyutlu değildir, türüne göre değişir. Şehir ya da vahşi bölge (wild lands) olabilir. Başlangıç ölçüleri:
+## Dünya ve haritalar
+- **[Karar]** Dünya birbirine bağlı ayrı haritalardan oluşur. Her harita ayrı bir sahne; kenarlardaki çıkışlar diğer haritalara bağlanır.
+- **[Karar]** Kare boyutu 32×32 px. Harita boyutları türüne göre değişir: vahşi bölge 64×40, şehir 48×32, küçük alan/arena 32×24 ile 40×30 arası.
+- **[Karar]** Yapı: Prolog (Varneth Yolu) → Varneth (şehir, merkez) → 9 bölge (3 perde × 3) → Kale. Ayrıntı: `story.md`, `roadmap.md`.
+- **[Karar]** Her bölgenin sonunda bir boss arenası var. Boss yenilince 1 kristal parçası düşer. 9 parça Kül Kalkanı'nı kırar, kalede Kral ve Malphas dövüşü olur.
+- **[Öneri]** Ziyaret edilen bölgelere şehirden ışınlanma (waypoint).
 
-| Harita türü | Boyut (kare) | Ekran sayısı (yaklaşık) | Yürüyerek geçiş |
-|---|---|---|---|
-| Vahşi bölge | 64×40 | 4×5 | ~15 sn |
-| Şehir | 48×32 | 3×4 | ~11 sn |
-| Küçük alan / son nokta (kale arka bahçesi gibi) | 32×24 | 2×3 | ~8 sn |
-
-- **[Karar]** Ekran yaklaşık 15×8 kare gösterir (geniş telefonlarda yatayda ~19 kare). Kamera oyuncuyu takip eder.
-- **[Karar]** Haritaların kenarlarında (kuzey, güney, doğu, batı) çıkışlar vardır. Dünyanın ucundaki haritalarda daha az çıkış bulunur.
-- **[Karar]** Bir çıkışa girildiğinde bağlı harita yüklenir ve oyuncu o haritanın karşı kenarındaki girişte belirir.
-- **[Karar]** Kare (tile) boyutu: 32×32 px
-
-### Örnek dünya bağlantısı
-```
-[Vahşi Bölge] ←batı— [Şehir] —doğu→ [Kale] —doğu→ [Kale Arka Bahçesi] (dünyanın ucu)
-```
-
-## Sınıflar
+## Karakterler ve sınıflar
+- **[Karar]** Karakterler yandan görünür: sadece sağa bakan kareler var, sola bakış aynalamayla yapılıyor.
 - **[Karar]** 4 sınıf:
 
-| Sınıf | Rol | Öne çıkan özellik |
-|---|---|---|
-| Paladin | Tank | Yüksek savunma, zırh ve kalkan |
-| Wizard | Alan hasarı | Yüksek büyü gücü, elemental alan büyüleri |
-| Warrior | Ağır yakın dövüş | Yüksek hasar, yavaş saldırı |
-| Rogue | Çevik yakın dövüş | Kritik vuruş, yüksek hız |
+| Sınıf | Rol | Öne çıkan özellik | Görsel (Zerie paketi) |
+|---|---|---|---|
+| Warrior | Ağır yakın dövüş | Yüksek hasar | Soldier (şu an oynanan) |
+| Paladin | Tank | Savunma, kalkan | Knight **[Öneri]** |
+| Wizard | Alan hasarı | Elemental büyüler | Wizard **[Öneri]** |
+| Rogue | Çevik | Kritik vuruş, hız | Swordsman **[Öneri]** |
 
-- **[Açık]** Her sınıfın yetenek sayısı ve listesi
-- **[Karar]** Warrior (şimdilik Soldier görseli) mana kullanır: 60 mana, saniyede 1 dolar
-- **[Karar]** Warrior yeteneği "Yer Sarsıntısı": kılıcı yere saplar, çevresindeki tüm düşmanlara hasar verir, 20 mana
-- **[Açık]** Diğer sınıfların kaynak sistemi (enerji, öfke vb.)
+- **[Karar]** Şimdilik tek sınıf oynanabilir (Warrior). Yeteneği **Yer Sarsıntısı**: kılıcı yere saplar, çevresindeki herkese vurur, 20 mana harcar.
+- **[Yapılacak]** Özellikler (attributes): STR, AGI, INT, VIT (ya da benzeri). Şimdilik hepsi 10, etkileri sonra tasarlanacak. Seviye atlayınca özellik puanı verilir; sıklığı **[Açık]** (ör. her 3 seviyede bir).
+- **[Yapılacak]** Yetenek ağacı: açılan yeteneklerden 3'ü E/R/T yuvalarına konur.
+- **[Açık]** Diğer sınıfların kaynak sistemi (mana, enerji, öfke).
 
-## Oyuncu ve Kontroller
-- **[Karar]** Sol tarafta, dokunulan yerde beliren sanal joystick ile hareket
-- **[Karar]** Sağ altta saldırı, yetenek, can iksiri ve mana iksiri butonları; sağ üstte altın ve çanta butonu
-- **[Karar]** Klavye (test için): WASD/oklar, Space/J saldırı, K/2 yetenek, Q/1 can iksiri, E mana iksiri, I/Tab envanter
+## Savaş sistemi
+- **[Karar]** Hades benzeri, okunabilir ve hızlı savaş.
+- **[Karar]** Stamina: blok, parry ve yuvarlanma stamina harcar.
+- **[Karar]** Blok hasarın %80'ini keser. Blok tuşuna vuruştan hemen önce (0,2 sn içinde) basılırsa **parry** olur: düşman sersemler, kısa bir yavaşlama efekti çıkar.
+- **[Karar]** Yuvarlanma kısa süre dokunulmazlık verir.
+- **[Karar]** Saldırı türleri: normal (bloklanır), ağır (turuncu uyarı, stamina'yı çok tüketir), engellenemez (kırmızı uyarı, sadece yuvarlanarak kaçılır).
+- **[Karar]** Denge (poise): yeterince hasar alan düşman sersemler ve fazladan hasar alır.
+- **[Karar]** Düşmanlar bölükler hâlinde dolaşır; özel saldırılardan önce yerde uyarı alanı belirir.
 
-## Savaş Sistemi
-- **[Karar]** Düşmanlar gruplar (bölükler) hâlinde bulunur
-- **[Açık]** Hasar formülü, kritik vuruş, savunma hesabı
-
-## Loot ve Ekonomi
-- **[Karar]** Bir düşman grubu yenildiğinde sandık düşer
-- **[Karar]** Sandıktan çıkabilecekler: silah, zırh, iksir, altın, satılabilir değerli eşyalar
-- **[Karar]** Şehirlerde eşya alınıp satılabilir
-- **[Öneri]** Nadirlik seviyeleri renklerle gösterilir: Sıradan (beyaz), Büyülü (mavi), Nadir (sarı), Efsanevi (turuncu)
-- **[Karar]** Envanter: 12 kutuluk çanta (iksirler ve değerli eşyalar üst üste durur), Ekipman sekmesi silah/zırh görselleri gelince açılacak
-- **[Açık]** Sınıfa özel eşyalar
-
-## Düşmanlar
+## Düşmanlar ve boss'lar
 | Düşman | Özellik | Özel saldırı |
 |---|---|---|
-| Ork | Orta can, yavaş | Önüne baltayla yer vuruşu (alan) |
-| Kan Canavarı | Az can, hızlı | Uzaktan hücum (çizgi boyunca atılma) |
-| İblis | Yüksek can ve hasar | Etrafına geniş alan vuruşu |
-- **[Karar]** Özel saldırılardan önce yerde kırmızı uyarı alanı belirir; oyuncu kaçabilir
+| Ork | Orta can, yavaş | Önüne baltayla alan vuruşu (ağır) |
+| Kan Canavarı | Az can, hızlı | Uzaktan hücum (ağır) |
+| İblis | Yüksek can ve hasar | Etrafına geniş alan vuruşu (engellenemez) |
 
-## Hikâye
-- **[Açık]** Dünyanın ve kahramanın hikâyesi henüz belirlenmedi
+- **[Karar]** 9 boss + Kral Aldric + Malphas. Tasarımları: `bosses.md`.
+
+## İlerleme, loot ve ekonomi
+- **[Karar]** Düşmanlar deneyim verir. Seviye atlayınca can, mana ve hasar artar.
+- **[Yapılacak]** Yeni XP formülü: bir sonraki seviyenin gerekli XP'si, öncekinin 1,6 katı, yukarıya, 100'ün katına yuvarlanır. **[Açık]** Başlangıç değeri (öneri: 1→2 için 100).
+- **[Karar]** Bir bölük yenilince sandık düşer: altın, iksirler, değerli eşyalar. Silah ve zırh, ekipman sistemi gelince düşmeye başlayacak.
+- **[Karar]** Nadirlik renkleri: Sıradan (beyaz), Büyülü (mavi), Nadir (sarı), Efsanevi (turuncu).
+- **[Karar]** Dükkân (Kadir): iksir alınır, değerli eşya satılır. Demirci (Borak): cevher + altınla silah +1'den +10'a güçlenir.
+- **[Karar]** Crafting: yerden ot toplanır, Şifacı Mira'da iksir yapılır.
+- **[Yapılacak]** Envanter + karakter penceresi (birleşik, I ve C aynı pencereyi açar):
+  - Sol: 6×6 = 36 yuvalı çanta
+  - Sağ: ekipman yuvaları (kask, zırh, eldiven, ayakkabı, pelerin...), iki silah seti (ana el + ikinci el; çift elli silah ikinci eli kilitler), 3 mühimmat türlü sadak, özellikler, seviye, azami can ve mana, XP barı (fareyle üstüne gelince "350/1000" yazar)
 
 ## Arayüz
-_Henüz belirlenmedi._
+- **[Karar]** Tema: Pixel UI Fantasy (parşömen) + Pixel Bars (can/mana/stamina, düşman ve boss barları).
+- **[Karar]** HUD sol üst: can, mana, stamina, seviye ve XP, takip edilen görev. Sağ üst: altın. Üst orta: boss barı. Orta: olay mesajları.
+- **[Yapılacak]** PC HUD'u: alt ortada yetenek çubuğu (E/R/T) ve hızlı kullanım yuvaları (1/2).
+- **[Karar]** Pencereler açıkken oyun duraklar.
 
-## Geliştirme Sırası
-- **[Karar]** Önce küçük bir oynanabilir dilim (vertical slice): 1 sınıf (Warrior), 1 şehir, 1 vahşi bölge, 1 düşman türü, sandık ve basit envanter. Temel sistemler oturduktan sonra içerik genişletilir.
+## Grafik ve ses
+- **[Karar]** Hazır asset paketleri kullanılır (listesi: `downloads.md`). Eksik küçük parçaları (ikon, efekt, arayüz) Claude kodla çizebilir.
+- **[Karar]** Ses altyapısı hazır. Ses dosyaları gelince `data/audio.json` adlarına göre bağlanacak.

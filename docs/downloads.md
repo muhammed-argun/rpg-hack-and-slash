@@ -92,7 +92,7 @@ Toplam bütçe: **zorunlu paketler 5 dolar** (Zerie'nin iki tam paketi), geri ka
 - **İçinde:** 20 efekt (vuruş, patlama, duman, büyü), kareler 100×100. Karakter paketleriyle aynı kare boyutu, bu yüzden çok uyumlu.
 - **Ne için kullanacağım:** Vuruş kıvılcımı, parry parlaması, yuvarlanma tozu, boss efektleri, sandık açılma parıltısı.
 
-### 7. Mobile Controls (Kenney)
+### 7. Mobile Controls (Kenney) — PC'ye geçildiği için şimdilik GEREKSİZ
 - **Bağlantı:** https://kenney.nl/assets/mobile-controls
 - **Fiyat:** Ücretsiz. "Continue without donating" diyebilirsin.
 - **Lisans:** CC0, hiçbir şart yok

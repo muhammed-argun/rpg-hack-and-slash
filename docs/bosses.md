@@ -8,7 +8,7 @@ Bu belge tartışmamız için bir taslak. Her boss'un dövüş tarzı, saldırı
   - **Normal:** Bloklanabilir ve parry'lenebilir.
   - **Ağır (turuncu parlama):** Bloklanabilir ama stamina'yı çok tüketir. Parry'lenirse boss sendeler.
   - **Engellenemez (kırmızı parlama):** Blok ve parry işe yaramaz, sadece yuvarlanarak kaçılır.
-- **Uyarı (telegraph):** Her saldırının okunabilir bir hazırlığı var. Mobilde tepki süresi daha uzun olmalı, bu yüzden hazırlık süreleri en az 0,5 saniye.
+- **Uyarı (telegraph):** Her saldırının okunabilir bir hazırlığı var. Hazırlık süreleri en az 0,5 saniye (oyuncu tepki verebilsin; PC'de istenirse kısaltılabilir).
 - **Denge (poise):** Boss'ların denge barı büyük. Kırılınca 2 saniye sersemler ve fazladan hasar alır.
 - **Arena:** Her boss'un kapalı bir arenası var. Dövüş başlayınca çıkış kapanır, ekranın üstünde boss can barı (Pixel Bars'ın BOSS şekli) belirir.
 - **Ödül:** Her boss'tan 1 **Kristal Parçası** ve büyük bir sandık düşer.

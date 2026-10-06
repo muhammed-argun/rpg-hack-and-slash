@@ -30,18 +30,18 @@ Prolog (yol) → Varneth (şehir, merkez)
   - Haritaları tileset'ler gelince **yarı otomatik araçla** üreteceğiz.
   - Bölge başına bir "tema" (zemin, engeller, renk tonu) ve bir yerleşim şablonu olacak.
   - Sonra elle cilalayacağız (ev, NPC, sandık yerleri).
-- Şehirden bölgelere **seyahat kapısı (Waypoint)**: Diablo'daki gibi, ziyaret edilen bölgelere şehirden ışınlanma. Mobilde uzun yürüyüşleri kısaltır.
+- Şehirden bölgelere **seyahat kapısı (Waypoint)**: Diablo'daki gibi, ziyaret edilen bölgelere şehirden ışınlanma. Uzun yürüyüşleri kısaltır.
 
 ## Sistemler
 
-### Çekirdek (bu gece)
+### Çekirdek (2026-10-06 gecesi yapıldı)
 | Sistem | Durum | Not |
 |---|---|---|
 | Türkçe / İngilizce dil desteği | ✅ | `data/translations/*.csv`, ayarlardan değişiyor |
 | Ana menü, ayarlar, duraklatma, çıkış onayı | ✅ | Ses düzeyleri, dil, titreşim |
-| Kayıt / yükleme | ✅ | Otomatik kayıt: harita değişiminde ve görev ilerleyince. Mobilde şart. |
+| Kayıt / yükleme | ✅ | Otomatik kayıt: harita değişiminde, görev ilerleyince, dakikada bir |
 | Stamina (yeşil bar) | ✅ | Blok, parry ve yuvarlanma harcar |
-| Blok ve parry | ✅ | Kalkan butonu: basılı tut = blok, doğru anda bas = parry |
+| Blok ve parry | ✅ | Basılı tut = blok, doğru anda bas = parry |
 | Yuvarlanma (dodge) | ✅ | Kısa dokunulmazlık süresi (i-frame) |
 | Denge (poise) ve sersemleme (stagger) | ✅ | Düşmanlar ve oyuncu için |
 | Engellenemez saldırılar | ✅ | Kırmızı parlama, sadece yuvarlanarak kaçılır |
@@ -65,51 +65,47 @@ Prolog (yol) → Varneth (şehir, merkez)
 | Sınıf seçimi (Paladin, Wizard, Rogue) | ⏳ | Zerie paketleri gelince. Her sınıfın kendi yeteneği. |
 | Düşman yol bulma (navigation) | ✅ | Harita açılırken engellerden navigasyon alanı çıkarılıyor |
 | Prolog ve öğretici ipuçları | ✅ | Gece yolu, anlatı kartı, ork baskını, ilk dakikalarda ipuçları |
-| Android dışa aktarma ayarı | ✅ | `export_presets.cfg`, JSON verileri dahil |
+| Android dışa aktarma ayarı | ✅ | `export_presets.cfg`, JSON verileri dahil (PC ayarları eklenecek) |
 | Mini harita | 💡 | Köşede küçük harita |
-| Günlük ödül, başarımlar | 💡 | Mobil oyuncuyu geri getirir |
+| Steam başarımları | 💡 | GodotSteam eklentisiyle |
 | Hikâye sinematikleri | 💡 | Basit konuşma sahneleri: kamera kayması + diyalog |
 
 ### Neden "ağaç kesip mızrak yapma" yok?
-Mobil oyuncu ilk dakikalarda dövüşmek ister. Oyunun açılışında malzeme toplamak tempoyu düşürür. Onun yerine:
+Oyunun açılışında malzeme toplamak tempoyu düşürür; oyuncu ilk dakikalarda dövüşmek ister. Onun yerine:
 - **Prolog** oyuncuyu doğrudan dövüşe sokuyor.
 - **Crafting** isteğe bağlı ve ödüllendirici: otlardan iksir yapmak, cevherle silah güçlendirmek.
 
-## Mobil kontrol düzeni (yeni)
-```
- [Can][Mana][Stamina]                [Altın] [Çanta]
- [Görev takibi]                       [Duraklat]
-
-                                   [İksir] [Mana İks.]
- (Joystick)                      [Yetenek] [Kalkan]
-                                   [Yuvarlan] [SALDIRI]
-```
-- **Kalkan:** basılı tut = blok, saldırıdan hemen önce bas = parry
-- **Yuvarlan:** joystick'in gösterdiği yöne kısa bir atılma
-- **Etkileşim:** Bir NPC'ye yaklaşınca saldırı butonunun üstünde **"Konuş"** balonu belirir. Ayrı bir buton gerekmez.
-
 ## Aşamalar
 
-### Aşama 1: Dikey dilim (şu anki hedef)
-Hedef: Prolog + Varneth + 1 bölge (Kül Ormanı) + Fenris + 3 şehir görevi + crafting. Baştan sona oynanabilir olacak.
+### Aşama 0: PC'ye geçiş (ŞU ANKİ İŞ)
+Ayrıntılı iş listesi: `handoff.md` 3. bölüm.
+- [ ] Ekrandaki dokunmatik kontrolleri kaldır (kodu mobil port için sakla), fare ile dokunma taklidini kapat
+- [ ] Ayarlara tuş atama ekranı (klavye/fare + gamepad), atamaların kaydı
+- [ ] Hades tarzı nişan: WASD ile hareket, imlece (gamepad'de sağ çubuğa) doğru saldırı, özel imleç
+- [ ] Yetenek yuvaları E/R/T, hızlı kullanım yuvaları 1/2, ayrı etkileşim tuşu (F)
+- [ ] Birleşik envanter + karakter penceresi (I/C): 36 yuvalı çanta, ekipman yuvaları, iki silah seti, sadak, özellikler, XP barı
+- [ ] Yeni XP formülü (1,6 kat, 100'e yukarı yuvarlama), seviye atlayınca özellik puanı
+- [ ] Tam ekran/çözünürlük/V-Sync ayarları; Windows ve Linux (Steam Deck) dışa aktarma ayarları
+- [ ] Öğretici ipuçlarını PC kontrollerine göre yeniden yaz
+
+### Aşama 1: Dikey dilim
+Hedef: Prolog + Varneth + 1 bölge (Kül Ormanı) + Fenris + şehir görevleri + crafting, baştan sona oynanabilir.
 - [x] Temel savaş, loot, envanter, mana ve yetenek
 - [x] Dil (TR/EN), ana menü, ayarlar, duraklatma, kayıt/yükleme
 - [x] Stamina, blok, parry, yuvarlanma, denge ve sersemleme, engellenemez saldırılar
 - [x] NPC'ler ve diyaloglar, 3 ana ve 6 yan görev, görev günlüğü, ot toplama ve simya
 - [x] Boss altyapısı, Kurt İni arenası, Fenris (yer tutucu görselle), kristal parçası, Kül Kalkanı
-- [ ] Paketler gelince: tileset'lerle Varneth ve Kül Ormanı haritaları, NPC görselleri, Fenris'in görseli, sesler
+- [x] Dükkân, demirci, deneyim ve seviye, yol bulma, prolog, öğretici ipuçları, ses altyapısı
+- [ ] Paketler gelince: tileset'lerle Varneth ve Kül Ormanı, NPC ve Fenris görselleri, sesler
 
-### Aşama 2: 2. Perde tamam
-Batık Mezarlık + Taş Labirent, Morvane + Asterion, dükkân, silah güçlendirme, deneyim ve seviye.
+### Aşama 2: 2. Perde
+Batık Mezarlık + Taş Labirent haritaları, Morvane + Asterion (boss verileri hazır), ekipman sistemi, sınıf seçimi.
 
 ### Aşama 3: 3. ve 4. Perde
-Kalan 6 bölge ve 6 boss, Ezra'nın kaçırılma olayı, Corvin draması.
+Kalan 6 bölge ve boss haritaları, Ezra'nın kaçırılma olayı, Corvin draması, yetenek ağacı.
 
 ### Aşama 4: Final ve cila
-Kale, Kral ve Malphas, son sahne, sınıf seçimi, ses ve müzik cilası, denge ayarları.
+Kale, Kral ve Malphas (verileri hazır), son sahne (hazır), özel boss davranışları, ses ve müzik cilası, denge ayarları.
 
 ### Aşama 5: Yayın
-Android dışa aktarma ayarları, performans testleri (eski telefonlarda), Google Play sayfası, kredi ekranı.
-
-## Bu gece yaptıklarımın özeti
-Sen döndüğünde en güncel durum için `docs/decisions.md` dosyasının en üstüne bak. Bu tablo da işler bittikçe güncellenecek.
+Windows/Linux dışa aktarma, Steam Deck testi, Steam sayfası, kredi ekranı. Mobil port isteğe bağlı.

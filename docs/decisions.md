@@ -2,6 +2,14 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-06 — PC'ye geçiş kararı
+- **Platform PC (Windows) oldu**; Steam Deck ve gamepad desteklenecek. Mobil (Android) ileride port olarak gelebilir.
+- Ekrandaki dokunmatik kontroller kaldırılacak. Kodları (`TouchJoystick`, `ActionButton`) mobil port için saklanıyor.
+- Savaş Hades tarzına geçiyor: WASD ile hareket, imlece (gamepad'de sağ çubuğa) doğru saldırı.
+- Tuşlar: yetenekler E/R/T, hızlı kullanım 1/2, envanter I, karakter C (birleşik pencere). Tüm tuşlar ayarlardan değiştirilebilir olacak.
+- XP formülü değişecek: öncekinin 1,6 katı, 100'e yukarı yuvarlanır.
+- Bu kararların iş listesi: `handoff.md` 3. bölüm. Yazıldığı anda henüz kodlanmamıştı.
+
 ## 2026-10-06 — Gece çalışması: ses, ipuçları, yol bulma, prolog
 - **Ses:** `Audio` autoload'u. Oyundaki olaylar isimli sesler çalar (`swing`, `hit`, `parry`...). Ad → dosya eşlemesi `data/audio.json` dosyasında; dosya yoksa ses atlanır. Haritaların müziği `Map.music`, boss dövüşünde boss müziği çalar.
 - **Öğretici ipuçları:** İlk oyunda hareket, konuşma, saldırı, blok/parry, yuvarlanma ve yetenek için sırayla ipucu çıkar. Her biri bir kez yapılınca kaybolur (`tutorial_*` bayrakları).
