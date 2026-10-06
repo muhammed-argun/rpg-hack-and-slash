@@ -1,13 +1,16 @@
 extends CanvasLayer
 ## Oyun arayüzü: can/mana/stamina barları (Pixel Bars), görev takibi, boss barı, altın kesesi,
-## aksiyon butonları, olay mesajları, harita adı ve pencereler (envanter, simya, diyalog,
-## duraklatma). Bir pencere açıkken oyun duraklar ve dokunmatik kontroller gizlenir.
+## menü butonları, etkileşim ipucu, olay mesajları, harita adı ve pencereler (envanter, simya,
+## diyalog, duraklatma). Bir pencere açıkken oyun duraklar.
+## Dokunmatik kontroller (TouchJoystick, ActionButton) PC sürümünde kullanılmıyor; mobil port için saklanıyor.
 
 signal save_requested
 
 const MESSAGE_LIFETIME := 2.5
 const MAX_MESSAGES := 4
-const HELD_ACTIONS := ["move_left", "move_right", "move_up", "move_down", "attack", "skill", "block", "dodge"]
+const HELD_ACTIONS := ["move_left", "move_right", "move_up", "move_down", "attack", "interact", "skill", "block", "dodge"]
+## Etkileşim ipucunun nesnenin kökünden yukarı uzaklığı (NPC adı ve görev işaretinin üstü)
+const PROMPT_OFFSET_Y := -76.0
 
 @onready var hp_bar: PixelBar = %HPBar
 @onready var hp_label: Label = %HPLabel
@@ -25,13 +28,10 @@ const HELD_ACTIONS := ["move_left", "move_right", "move_up", "move_down", "attac
 @onready var gold_label: Label = %GoldLabel
 @onready var messages: VBoxContainer = %Messages
 @onready var map_name: Label = %MapName
-@onready var joystick: TouchJoystick = %TouchJoystick
-@onready var action_buttons: Control = %ActionButtons
 @onready var interact_prompt: Label = %InteractPrompt
-@onready var skill_button: ActionButton = %SkillButton
-@onready var health_potion_button: ActionButton = %HealthPotionButton
-@onready var mana_potion_button: ActionButton = %ManaPotionButton
-@onready var quest_button: ActionButton = %QuestButton
+@onready var pause_button: Button = %PauseButton
+@onready var bag_button: Button = %BagButton
+@onready var quest_button: Button = %QuestButton
 @onready var inventory: InventoryWindow = %InventoryWindow
 @onready var crafting: CraftingWindow = %CraftingWindow
 @onready var shop: ShopWindow = %ShopWindow
@@ -43,6 +43,8 @@ var _boss: Boss
 var _ending: EndingScreen
 var _story: StoryCard
 var _player_connected := false
+var _windows_open := false
+var _prompt_target: Interactable
 
 
 func _ready() -> void:
@@ -50,9 +52,6 @@ func _ready() -> void:
 	GameState.mana_changed.connect(_on_mana_changed)
 	GameState.stamina_changed.connect(_on_stamina_changed)
 	GameState.gold_changed.connect(_on_gold_changed)
-	GameState.health_potions_changed.connect(_on_health_potions_changed)
-	GameState.mana_potions_changed.connect(_on_mana_potions_changed)
-	GameState.skill_cooldown_started.connect(skill_button.start_cooldown)
 	GameState.message.connect(_on_message)
 	GameState.boss_started.connect(_on_boss_started)
 	GameState.boss_ended.connect(_on_boss_ended)
@@ -63,6 +62,7 @@ func _ready() -> void:
 	Quests.quest_ready.connect(_refresh_quest_tracker.unbind(1))
 	Quests.quest_completed.connect(_refresh_quest_tracker.unbind(1))
 	Settings.changed.connect(_refresh_quest_tracker)
+	Settings.changed.connect(_refresh_interact_prompt)
 	Dialogue.dialogue_started.connect(_on_window_opened.unbind(3))
 	Dialogue.dialogue_finished.connect(_on_window_closed.unbind(2))
 	Dialogue.window_requested.connect(_on_window_requested)
@@ -73,6 +73,8 @@ func _ready() -> void:
 	pause_menu.resumed.connect(_on_window_closed)
 	pause_menu.save_requested.connect(save_requested.emit)
 	quest_button.pressed.connect(_open_quests)
+	bag_button.pressed.connect(_toggle_inventory)
+	pause_button.pressed.connect(open_pause_menu)
 	GameState.flag_changed.connect(_on_flag_changed)
 	_ending = EndingScreen.new()
 	$Root.add_child(_ending)
@@ -81,14 +83,12 @@ func _ready() -> void:
 	_story.finished.connect(_on_window_closed)
 	var hints := TutorialHints.new()
 	$Root.add_child(hints)
-	$Root.move_child(hints, action_buttons.get_index())
+	$Root.move_child(hints, interact_prompt.get_index())
 	_on_hp_changed(GameState.hp, GameState.max_hp)
 	_on_mana_changed(int(GameState.mana), GameState.max_mana)
 	_on_stamina_changed(int(GameState.stamina), GameState.max_stamina)
 	_on_gold_changed(GameState.gold)
 	_on_xp_changed(GameState.xp, GameState.xp_to_next(), GameState.level)
-	_on_health_potions_changed(GameState.health_potions)
-	_on_mana_potions_changed(GameState.mana_potions)
 	_refresh_quest_tracker()
 	for bar: PixelBar in [hp_bar, mp_bar, stamina_bar]:
 		bar.settle()
@@ -96,13 +96,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_connect_player()
-	_update_skill_button()
-	if Input.is_action_just_pressed("toggle_inventory") and not _is_busy_except(inventory):
-		if inventory.visible:
-			inventory.close()
-		else:
-			_on_window_opened()
-			inventory.open()
+	_update_interact_prompt()
+	if Input.is_action_just_pressed("toggle_inventory"):
+		_toggle_inventory()
 	if Input.is_action_just_pressed("pause") and not dialogue_box.visible:
 		if pause_menu.visible:
 			pause_menu.resume()
@@ -140,6 +136,16 @@ func _is_busy_except(window: Control) -> bool:
 	return false
 
 
+func _toggle_inventory() -> void:
+	if _is_busy_except(inventory):
+		return
+	if inventory.visible:
+		inventory.close()
+	else:
+		_on_window_opened()
+		inventory.open()
+
+
 func _open_quests() -> void:
 	if _is_busy_except(null):
 		return
@@ -158,12 +164,11 @@ func _on_window_requested(window_name: String) -> void:
 	windows[window_name].open()
 
 
-# Bir pencere açılınca: dokunmatik kontrolleri gizle, basılı kalan aksiyonları bırak
+# Bir pencere açılınca: etkileşim ipucunu gizle, basılı kalan aksiyonları bırak
 func _on_window_opened() -> void:
-	if action_buttons.visible:
+	if not _windows_open:
 		Audio.play_sfx("ui_open", 0.0)
-	joystick.hide()
-	action_buttons.hide()
+	_windows_open = true
 	for action: String in HELD_ACTIONS:
 		Input.action_release(action)
 
@@ -172,8 +177,7 @@ func _on_window_closed() -> void:
 	if _is_busy_except(null):
 		return
 	Audio.play_sfx("ui_close", 0.0)
-	joystick.show()
-	action_buttons.show()
+	_windows_open = false
 
 
 func _connect_player() -> void:
@@ -186,18 +190,27 @@ func _connect_player() -> void:
 
 
 func _on_interactable_changed(interactable: Interactable) -> void:
-	interact_prompt.visible = interactable != null
-	if interactable:
-		interact_prompt.text = interactable.prompt_key
+	_prompt_target = interactable
+	_refresh_interact_prompt()
 
 
-# Yeteneğin mana bedeli ve manası yetmiyorsa soluk görünmesi
-func _update_skill_button() -> void:
-	var player := get_tree().get_first_node_in_group("player") as Player
-	if player == null:
+# İpucu metni: etkileşim tuşu + eylem adı, ör. "[F] Konuş"
+func _refresh_interact_prompt() -> void:
+	if _prompt_target == null:
 		return
-	skill_button.set_count(player.skill_mana_cost)
-	skill_button.set_dimmed(GameState.mana < player.skill_mana_cost)
+	interact_prompt.text = "[%s] %s" % [Settings.get_action_key_label("interact"), tr(_prompt_target.prompt_key)]
+	interact_prompt.reset_size()
+
+
+# İpucunu etkileşilecek nesnenin üstünde, ekran koordinatlarında tutar
+func _update_interact_prompt() -> void:
+	var target := _prompt_target
+	var show_prompt := is_instance_valid(target) and target.is_inside_tree() and not _windows_open
+	interact_prompt.visible = show_prompt
+	if not show_prompt:
+		return
+	var screen_position := target.get_global_transform_with_canvas().origin
+	interact_prompt.position = (screen_position + Vector2(-interact_prompt.size.x / 2.0, PROMPT_OFFSET_Y)).round()
 
 
 func _refresh_quest_tracker() -> void:
@@ -286,16 +299,6 @@ func _on_level_up(_level: int) -> void:
 
 func _on_gold_changed(amount: int) -> void:
 	gold_label.text = str(amount)
-
-
-func _on_health_potions_changed(amount: int) -> void:
-	health_potion_button.set_count(amount)
-	health_potion_button.set_dimmed(amount == 0)
-
-
-func _on_mana_potions_changed(amount: int) -> void:
-	mana_potion_button.set_count(amount)
-	mana_potion_button.set_dimmed(amount == 0)
 
 
 func _on_message(text: String, color: Color) -> void:

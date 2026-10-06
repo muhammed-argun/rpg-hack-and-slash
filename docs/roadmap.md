@@ -79,14 +79,14 @@ Oyunun açılışında malzeme toplamak tempoyu düşürür; oyuncu ilk dakikala
 
 ### Aşama 0: PC'ye geçiş (ŞU ANKİ İŞ)
 Ayrıntılı iş listesi: `handoff.md` 3. bölüm.
-- [ ] Ekrandaki dokunmatik kontrolleri kaldır (kodu mobil port için sakla), fare ile dokunma taklidini kapat
+- [x] Ekrandaki dokunmatik kontrolleri kaldır (kodu mobil port için sakla), fare ile dokunma taklidini kapat
 - [ ] Ayarlara tuş atama ekranı (klavye/fare + gamepad), atamaların kaydı
 - [ ] Hades tarzı nişan: WASD ile hareket, imlece (gamepad'de sağ çubuğa) doğru saldırı, özel imleç
-- [ ] Yetenek yuvaları E/R/T, hızlı kullanım yuvaları 1/2, ayrı etkileşim tuşu (F)
+- [ ] Yetenek yuvaları E/R/T, hızlı kullanım yuvaları 1/2 (ayrı etkileşim tuşu F yapıldı)
 - [ ] Birleşik envanter + karakter penceresi (I/C): 36 yuvalı çanta, ekipman yuvaları, iki silah seti, sadak, özellikler, XP barı
 - [ ] Yeni XP formülü (1,6 kat, 100'e yukarı yuvarlama), seviye atlayınca özellik puanı
 - [ ] Tam ekran/çözünürlük/V-Sync ayarları; Windows ve Linux (Steam Deck) dışa aktarma ayarları
-- [ ] Öğretici ipuçlarını PC kontrollerine göre yeniden yaz
+- [x] Öğretici ipuçlarını PC kontrollerine göre yeniden yaz (tuş adları ayarlardaki atamadan okunuyor)
 
 ### Aşama 1: Dikey dilim
 Hedef: Prolog + Varneth + 1 bölge (Kül Ormanı) + Fenris + şehir görevleri + crafting, baştan sona oynanabilir.

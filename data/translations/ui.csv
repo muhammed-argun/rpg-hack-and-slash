@@ -26,14 +26,14 @@ UI_BAG,Çanta,Bag
 UI_GEAR,Ekipman,Gear
 UI_QUESTS,Görevler,Quests
 UI_COMING_SOON,Yakında,Coming soon
-UI_TAP_ITEM,Bir eşyaya dokun.,Tap an item.
-UI_TAP_QUEST,Bir göreve dokun.,Tap a quest.
+UI_TAP_ITEM,Bir eşyaya tıkla.,Click an item.
+UI_TAP_QUEST,Bir göreve tıkla.,Click a quest.
 UI_NO_QUESTS,Henüz görevin yok.,You have no quests yet.
 UI_TALK,Konuş,Talk
 UI_CRAFT,Yap,Craft
 UI_ALCHEMY,Simya,Alchemy
 UI_RECIPE_NEEDS,Gerekenler,Requires
-UI_TAP_TO_CONTINUE,Devam etmek için dokun,Tap to continue
+UI_TAP_TO_CONTINUE,Devam etmek için tıkla,Click to continue
 UI_SHARDS,Kristal Parçaları,Crystal Shards
 UI_MATERIALS,Malzemeler,Materials
 UI_QUEST_ACTIVE,Devam ediyor,In progress
@@ -146,10 +146,10 @@ BOSS_ALDRIC,Kral Aldric,King Aldric
 BOSS_ALDRIC_TITLE,Yozlaşmış Taç,The Corrupted Crown
 BOSS_MALPHAS,Malphas,Malphas
 BOSS_MALPHAS_TITLE,Kül Prensi,The Prince of Ash
-HINT_MOVE,"Sol taraftaki joystick ile yürü.","Use the joystick on the left to walk."
-HINT_TALK,"! işaretli kişilerin görevi var. Yanına git ve saldırı butonuyla konuş.","People marked with ! have a quest. Walk up to them and press the attack button to talk."
-HINT_ATTACK,"Saldırı butonunu basılı tut: durmadan saldırırsın.","Hold the attack button to keep attacking."
-HINT_BLOCK,"Kalkan butonu: basılı tutarsan bloklarsın. Vuruştan hemen önce basarsan PARRY yaparsın!","Shield button: hold to block. Press it right before a hit to PARRY!"
-HINT_DODGE,"Ok butonu: yuvarlan. Kırmızı uyarılardan sadece yuvarlanarak kaçabilirsin.","Arrow button: roll. Red warnings can only be escaped by rolling."
-HINT_SKILL,"Yetenek butonu çevrendeki bütün düşmanlara vurur ve mana harcar.","The skill button strikes every enemy around you and costs mana."
+HINT_MOVE,"{move_up} {move_left} {move_down} {move_right} tuşlarıyla yürü.","Walk with {move_up} {move_left} {move_down} {move_right}."
+HINT_TALK,"! işaretli kişilerin görevi var. Yanına git ve [{interact}] tuşuyla konuş.","People marked with ! have a quest. Walk up to them and press [{interact}] to talk."
+HINT_ATTACK,"[{attack}] tuşunu basılı tut: durmadan saldırırsın.","Hold [{attack}] to keep attacking."
+HINT_BLOCK,"[{block}] basılı tutarsan bloklarsın. Vuruştan hemen önce basarsan PARRY yaparsın!","Hold [{block}] to block. Press it right before a hit to PARRY!"
+HINT_DODGE,"[{dodge}]: yuvarlan. Kırmızı uyarılardan sadece yuvarlanarak kaçabilirsin.","[{dodge}]: roll. Red warnings can only be escaped by rolling."
+HINT_SKILL,"[{skill}]: yetenek. Çevrendeki bütün düşmanlara vurur ve mana harcar.","[{skill}]: skill. Strikes every enemy around you and costs mana."
 MAP_PROLOGUE,Varneth Yolu,Road to Varneth

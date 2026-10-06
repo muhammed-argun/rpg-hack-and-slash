@@ -1,10 +1,10 @@
 class_name Interactable
 extends Node2D
-## Oyuncunun yaklaşıp saldırı butonuyla etkileşebildiği nesnelerin temeli (NPC, sunak, kapı...).
-## Oyuncu interact_radius içine girince HUD'daki saldırı butonunun üstünde prompt_key metni görünür.
+## Oyuncunun yaklaşıp etkileşim tuşuyla (interact, varsayılan F) kullanabildiği nesnelerin temeli (NPC, sunak, kapı...).
+## Oyuncu interact_radius içine girince nesnenin üstünde "[F] <prompt_key>" ipucu görünür (HUD çizer).
 
 @export var interact_radius: float = 30.0
-## Butonun üstünde gösterilecek metnin çeviri anahtarı
+## İpucunda tuştan sonra gösterilecek metnin çeviri anahtarı
 @export var prompt_key: String = "UI_TALK"
 
 

@@ -59,7 +59,7 @@ func play(line_keys: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-	if visible and Input.is_action_just_pressed("attack"):
+	if visible and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("attack")):
 		_finish()
 
 
@@ -80,4 +80,5 @@ func _finish() -> void:
 		modulate.a = 1.0
 		get_tree().paused = false
 		Input.action_release("attack")
+		Input.action_release("interact")
 		finished.emit())

@@ -22,6 +22,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	GameState.save_path = "user://save_boss_test.json"
 	GameState.new_game()
+	# Prologdaki giriş hikâye kartı oyunu duraklatmasın
+	GameState.set_flag("intro_seen")
 	_main = MAIN_SCENE.instantiate()
 	add_child(_main)
 	await get_tree().process_frame

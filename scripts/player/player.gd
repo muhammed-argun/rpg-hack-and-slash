@@ -2,9 +2,9 @@ class_name Player
 extends CharacterBody2D
 ## Oyuncu karakteri (şimdilik Warrior): hareket, saldırı, alan yeteneği, blok/parry, yuvarlanma,
 ## iksirler ve NPC'lerle etkileşim.
-## Girdi aksiyonları: move_left/right/up/down, attack, skill, block, dodge, use_potion, use_mana_potion
-## (klavye ve sanal joystick/butonlar aynı aksiyonları tetikler).
-## Yakında bir NPC varsa saldırı butonu "Konuş" olur.
+## Girdi aksiyonları: move_left/right/up/down, attack, interact, skill, block, dodge, use_potion,
+## use_mana_potion (klavye ve gamepad aynı aksiyonları tetikler).
+## Yakında bir NPC varsa etkileşim tuşu (interact) konuşmayı başlatır.
 
 signal interactable_changed(interactable: Interactable)
 
@@ -155,13 +155,13 @@ func _process_normal() -> void:
 		return
 	if Input.is_action_just_pressed("skill") and _try_start_skill():
 		return
-	# Yakında NPC varsa saldırı tuşu konuşmayı başlatır
-	if current_interactable and Input.is_action_just_pressed("attack"):
+	# Yakında NPC varsa etkileşim tuşu konuşmayı başlatır
+	if current_interactable and Input.is_action_just_pressed("interact"):
 		velocity = Vector2.ZERO
 		current_interactable.interact(self)
 		return
 	# Basılı tutulduğu sürece saldırmaya devam eder
-	if Input.is_action_pressed("attack") and current_interactable == null:
+	if Input.is_action_pressed("attack"):
 		_start_attack()
 		return
 

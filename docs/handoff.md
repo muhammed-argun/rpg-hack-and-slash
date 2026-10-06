@@ -5,10 +5,10 @@ Son güncelleme: 2026-10-06. Bu dosya yeni bir Claude oturumunun **ilk okuyacağ
 ## 1. Kısa geçmiş
 1. Proje **mobil (Android)** hack and slash olarak başladı. Dokunmatik joystick ve ekran butonlarıyla oynanabilir bir dikey dilim yapıldı.
 2. 2026-10-06 gecesi, kullanıcı yokken büyük bir otonom çalışmayla çekirdek sistemlerin hepsi eklendi (aşağıdaki tablo). Kullanıcı bunları push'ladı.
-3. Aynı gün kullanıcı **PC'ye geçme** kararı aldı: Steam Deck destekli, gamepad ile de oynanabilir. Mobil port ileride yapılabilir. **Bu geçiş henüz kodlanmadı**, 3. bölümdeki iş listesi bunun için.
+3. Aynı gün kullanıcı **PC'ye geçme** kararı aldı: Steam Deck destekli, gamepad ile de oynanabilir. Mobil port ileride yapılabilir. İş listesi 3. bölümde. **3.1 bitti** (dokunmatik kontroller kaldırıldı, F ile konuşma); sıradaki 3.2.
 
 ## 2. Şu an oyunda çalışanlar
-Hepsi otomatik testlerle doğrulandı (duman testi: 70 kontrol; boss testi: 10 boss).
+Hepsi otomatik testlerle doğrulandı (duman testi: 73 kontrol; boss testi: 10 boss).
 
 | Sistem | Durum | Nerede |
 |---|---|---|
@@ -24,16 +24,21 @@ Hepsi otomatik testlerle doğrulandı (duman testi: 70 kontrol; boss testi: 10 b
 | Boss altyapısı + 9 boss + Kral → Malphas + oyun sonu | ✅ (Fenris dışındakiler haritasız) | `scripts/bosses/`, `scenes/bosses/` |
 | Ses altyapısı (olay sesleri, harita/boss müziği) | 🔨 Dosyalar yok | `scripts/autoload/audio.gd`, `data/audio.json` |
 | HUD: can/mana/stamina, seviye/XP, görev takibi, boss barı, mesajlar | ✅ | `scenes/ui/hud.tscn`, `scripts/ui/hud.gd` |
-| Dokunmatik kontroller (joystick, ekran butonları) | ✅ ama **PC'de kaldırılacak** | `touch_joystick.gd`, `action_button.gd` |
+| Dokunmatik kontroller (joystick, ekran butonları) | ⏸ HUD'dan kaldırıldı, kod mobil port için saklı | `touch_joystick.gd`, `action_button.gd` |
 
 ### Şu anki kontroller (değişecek, bkz. 3. bölüm)
-WASD hareket · Space/J saldırı ve konuşma · L blok/parry · Shift yuvarlanma · K yetenek · Q can iksiri · E mana iksiri · I/Tab envanter · Esc/P duraklat.
+WASD hareket · Space/J saldırı · **F konuş** · L blok/parry · Shift yuvarlanma · K yetenek · Q can iksiri · E mana iksiri · I/Tab envanter · Esc/P duraklat. Sağ üstteki duraklat/çanta/görev butonlarına fareyle tıklanabilir.
+Henüz gamepad tuşu atanmadı (3.2/3.3).
 Saldırı, karakterin son hareket yönüne (`aim_direction`) gidiyor; görsel yalnızca sağa/sola bakıyor.
 
 ## 3. SIRADAKİ İŞ: PC'ye geçiş (kullanıcının istekleri)
 Kullanıcı bunları açıkça istedi. Sırayla yap; her adımdan sonra duman testini çalıştır, gerekirse testi güncelle.
 
-### 3.1 Ekrandaki dokunmatik kontrolleri kaldır
+### 3.1 Ekrandaki dokunmatik kontrolleri kaldır ✅ (2026-10-06)
+Yapılanlar (ayrıntı: `decisions.md`): joystick ve aksiyon butonları HUD'dan çıktı; duraklat/çanta/görev normal `Button`; `emulate_touch_from_mouse=false`; yeni `interact` aksiyonu (F) ve NPC üstünde `[F] Konuş`; `HINT_*` ve `UI_TAP_*` metinleri PC'ye göre, tuş adları `Settings.format_action_keys()` ile atamadan okunuyor. Duman testine 3 kontrol eklendi.
+**Geçici eksik:** iksir sayısı ve yetenek bekleme süresi HUD'da görünmüyor; 3.4'te yetenek çubuğu ve hızlı kullanım yuvalarıyla gelecek.
+
+Aşağıdaki madde listesi orijinal istek (kayıt için duruyor):
 - HUD'dan joystick ve aksiyon butonlarını (saldırı, yetenek, blok, yuvarlanma, iksirler) **kaldır**.
 - Dosyaları silme (`touch_joystick.gd`, `action_button.gd`, `action_button.tscn`). İleride mobil port için lazım olabilir. HUD'daki çanta/görev/duraklat butonları da ActionButton kullanıyor; PC'de bunlar ya fareyle tıklanan normal butonlara dönüşmeli ya da kalkmalı (kısayolları var).
 - `project.godot`: `input_devices/pointing/emulate_touch_from_mouse=true` ayarı kapatılmalı (fare artık nişan için kullanılacak).

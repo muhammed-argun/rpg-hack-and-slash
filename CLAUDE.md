@@ -49,7 +49,7 @@ Bu dosya her Claude oturumunun başında otomatik okunur.
 - **Metinler:** Oyuncuya görünen her metin bir çeviri anahtarıdır. Yeni metin eklerken `data/translations/*.csv` dosyasına TR ve EN birlikte eklenir. Arayüzde `text = "ANAHTAR"` yazmak yeter (Godot otomatik çevirir), koddan `tr("ANAHTAR")`.
 - **Karakter görselleri:** `CharacterSprite`, klasörden `<animasyon>_<yön>_<NN>.png` kuralıyla yükler (ayrıntı: `docs/assets.md`). Görsel eklemek kod değişikliği gerektirmez.
 - **Savaş:** Düşman saldırıları `Player.take_damage(miktar, kaynak, Combat.Kind)` ile verilir. `Combat.Kind`: NORMAL, HEAVY (turuncu uyarı), UNBLOCKABLE (kırmızı uyarı). Sonuç `Combat.Result` (HIT, BLOCKED, PARRIED, DODGED, GUARD_BROKEN).
-- **Girdi:** Oyun kodu yalnızca Input Map aksiyonlarını okur (`move_*`, `attack`, `skill`, `block`, `dodge`, `use_potion`, `use_mana_potion`, `toggle_inventory`, `pause`). Klavye, gamepad ve dokunmatik aynı aksiyonları tetikler.
+- **Girdi:** Oyun kodu yalnızca Input Map aksiyonlarını okur (`move_*`, `attack`, `interact`, `skill`, `block`, `dodge`, `use_potion`, `use_mana_potion`, `toggle_inventory`, `pause`). Klavye ve gamepad aynı aksiyonları tetikler (dokunmatik kod mobil port için saklı, HUD'da yok). Metinde tuş adı gerekirse `Settings.format_action_keys("{interact}")` kullanılır, tuş adı metne yazılmaz.
 - **Pencereler** (envanter, simya, dükkân, demirci, diyalog, duraklatma) açıkken `get_tree().paused = true`; HUD `PROCESS_MODE_ALWAYS`.
 - Çarpışma katmanları: 1 = world, 2 = player, 3 = enemy
 - Yer efektleri (uyarı alanı, şok dalgası) `Map.add_ground_effect()` ile zemin ve karakterler arasına çizilir.
@@ -67,7 +67,7 @@ Godot: `E:\GodotSetup\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_co
 | Amaç | Komut |
 |---|---|
 | Script hata kontrolü / içe aktarma | `godot --headless --path . --import` (yeni addon/tema sonrası ilk çalıştırma doku hatası verebilir, ikinci temiz olmalı) |
-| **Duman testi** (70 kontrol, oyunu otomatik oynar) | `godot --path . res://tools/smoke_test.tscn --quit-after 20000` |
+| **Duman testi** (73 kontrol, oyunu otomatik oynar) | `godot --path . res://tools/smoke_test.tscn --quit-after 20000` |
 | **Boss testi** (10 boss) | `godot --path . res://tools/boss_test.tscn --quit-after 50000 -- --all` |
 | Tek boss'u elle dene | `godot --path . res://tools/boss_test.tscn -- --boss=fenris` |
 | Haritaları üret (var olanın üzerine yazmaz) | `godot --headless --path . res://tools/build_demo_maps.tscn` |

@@ -32,8 +32,8 @@ func _process(delta: float) -> void:
 		if text_label.visible_ratio >= 1.0:
 			_typing = false
 			hint_label.show()
-	# Klavyeyle de ilerletilebilir (saldırı tuşu)
-	if Input.is_action_just_pressed("attack") and _input_lock <= 0.0:
+	# Klavyeyle de ilerletilebilir (etkileşim ya da saldırı tuşu)
+	if (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("attack")) and _input_lock <= 0.0:
 		_advance()
 
 
@@ -72,6 +72,7 @@ func _advance() -> void:
 	get_tree().paused = false
 	# Basılı kalan saldırı tuşu konuşma biter bitmez saldırı başlatmasın
 	Input.action_release("attack")
+	Input.action_release("interact")
 	Dialogue.finish()
 
 

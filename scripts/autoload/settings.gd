@@ -72,6 +72,34 @@ func set_vibration(value: bool) -> void:
 	save_settings()
 
 
+## Bir aksiyona atanmış ilk klavye tuşunun kısa adı (ör. "F", "Space"). İpuçlarında gösterilir;
+## tuş ayarlardan değişince ipuçları da kendiliğinden değişir.
+func get_action_key_label(action: String) -> String:
+	if not InputMap.has_action(action):
+		return "?"
+	for event in InputMap.action_get_events(action):
+		var key := event as InputEventKey
+		if key == null:
+			continue
+		var keycode := key.keycode
+		if keycode == KEY_NONE:
+			# Fiziksel tuşu (klavye düzeninden bağımsız konum) kullanıcının düzenindeki harfe çevir
+			keycode = DisplayServer.keyboard_get_keycode_from_physical(key.physical_keycode)
+		if keycode == KEY_NONE:
+			keycode = key.physical_keycode
+		return OS.get_keycode_string(keycode)
+	return "?"
+
+
+## Metindeki {aksiyon} yer tutucularını tuş adlarıyla doldurur, ör. "{interact} ile konuş" → "F ile konuş".
+func format_action_keys(text: String) -> String:
+	var keys := {}
+	for action: StringName in InputMap.get_actions():
+		if not str(action).begins_with("ui_") and text.contains("{%s}" % action):
+			keys[str(action)] = get_action_key_label(action)
+	return text.format(keys)
+
+
 ## Telefonu kısa süre titreştirir (ayarlarda kapalıysa hiçbir şey yapmaz).
 func vibrate(duration_ms: int = 40) -> void:
 	if vibration and OS.has_feature("mobile"):

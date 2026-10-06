@@ -4,18 +4,8 @@
 [ext_resource type="Theme" path="res://assets/ui/game_theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://addons/pixel_bars/pixel_bar.gd" id="3_pixel_bar"]
 [ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/coin.png" id="4_coin"]
-[ext_resource type="Script" path="res://scripts/ui/touch_joystick.gd" id="5_joystick"]
-[ext_resource type="Texture2D" path="res://assets/ui/joystick_base.png" id="6_base"]
-[ext_resource type="Texture2D" path="res://assets/ui/joystick_knob.png" id="7_knob"]
-[ext_resource type="PackedScene" path="res://scenes/ui/action_button.tscn" id="8_button"]
-[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/sword.png" id="9_sword"]
-[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/skills/fire_nova.png" id="10_skill"]
-[ext_resource type="Texture2D" path="res://assets/items/potion_health.png" id="11_hp_potion"]
-[ext_resource type="Texture2D" path="res://assets/items/potion_mana.png" id="12_mp_potion"]
 [ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/chest.png" id="13_bag"]
 [ext_resource type="PackedScene" path="res://scenes/ui/inventory_window.tscn" id="14_inventory"]
-[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/shield.png" id="15_shield"]
-[ext_resource type="Texture2D" path="res://addons/pixel_ui_fantasy/icons/arrow_right.png" id="16_dodge"]
 [ext_resource type="Texture2D" path="res://assets/ui/icon_pause.png" id="17_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialogue_box.tscn" id="18_dialogue"]
 [ext_resource type="Script" path="res://scripts/ui/crafting_window.gd" id="19_crafting"]
@@ -201,7 +191,8 @@ size_flags_horizontal = 3
 horizontal_alignment = 2
 text = "0"
 
-[node name="PauseButton" parent="Root" instance=ExtResource("8_button")]
+[node name="PauseButton" type="Button" parent="Root"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 1
 anchors_preset = 1
@@ -212,10 +203,11 @@ offset_top = 3.0
 offset_right = -4.0
 offset_bottom = 27.0
 grow_horizontal = 0
-action = "pause"
+focus_mode = 0
 icon = ExtResource("17_pause")
+icon_alignment = 1
 
-[node name="BagButton" parent="Root" instance=ExtResource("8_button")]
+[node name="BagButton" type="Button" parent="Root"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 1
@@ -227,10 +219,11 @@ offset_top = 30.0
 offset_right = -4.0
 offset_bottom = 58.0
 grow_horizontal = 0
-action = "toggle_inventory"
+focus_mode = 0
 icon = ExtResource("13_bag")
+icon_alignment = 1
 
-[node name="QuestButton" parent="Root" instance=ExtResource("8_button")]
+[node name="QuestButton" type="Button" parent="Root"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 1
@@ -242,7 +235,9 @@ offset_top = 30.0
 offset_right = -36.0
 offset_bottom = 58.0
 grow_horizontal = 0
+focus_mode = 0
 icon = ExtResource("21_quest")
+icon_alignment = 1
 
 [node name="Messages" type="VBoxContainer" parent="Root"]
 unique_name_in_owner = true
@@ -278,113 +273,17 @@ theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
 horizontal_alignment = 1
 text = "Varneth"
 
-[node name="TouchJoystick" type="Control" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 1
-anchor_top = 0.3
-anchor_right = 0.45
-anchor_bottom = 1.0
-mouse_filter = 2
-script = ExtResource("5_joystick")
-base_texture = ExtResource("6_base")
-knob_texture = ExtResource("7_knob")
-
-[node name="ActionButtons" type="Control" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
-grow_vertical = 0
-mouse_filter = 2
-
-[node name="AttackButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 0
-offset_left = -56.0
-offset_top = -56.0
-offset_right = -8.0
-offset_bottom = -8.0
-action = "attack"
-icon = ExtResource("9_sword")
-icon_scale = 2
-frame_variation = &"SkillSlot"
-
-[node name="InteractPrompt" type="Label" parent="Root/ActionButtons/AttackButton"]
+[node name="InteractPrompt" type="Label" parent="Root"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 0
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 64.0
-offset_bottom = -2.0
+offset_right = 40.0
+offset_bottom = 14.0
+mouse_filter = 2
 theme_type_variation = &"Nameplate"
 horizontal_alignment = 1
-text = "UI_TALK"
-
-[node name="DodgeButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 0
-offset_left = -100.0
-offset_top = -44.0
-offset_right = -64.0
-offset_bottom = -8.0
-action = "dodge"
-icon = ExtResource("16_dodge")
-icon_scale = 2
-
-[node name="BlockButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 0
-offset_left = -48.0
-offset_top = -100.0
-offset_right = -12.0
-offset_bottom = -64.0
-action = "block"
-icon = ExtResource("15_shield")
-icon_scale = 2
-
-[node name="SkillButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = -96.0
-offset_top = -92.0
-offset_right = -56.0
-offset_bottom = -52.0
-action = "skill"
-icon = ExtResource("10_skill")
-icon_scale = 2
-frame_variation = &"SkillSlot"
-show_count = true
-count_color = Color(0.55, 0.75, 1, 1)
-
-[node name="HealthPotionButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 0
-offset_left = -48.0
-offset_top = -144.0
-offset_right = -12.0
-offset_bottom = -108.0
-action = "use_potion"
-icon = ExtResource("11_hp_potion")
-show_count = true
-
-[node name="ManaPotionButton" parent="Root/ActionButtons" instance=ExtResource("8_button")]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 0
-offset_left = -92.0
-offset_top = -136.0
-offset_right = -56.0
-offset_bottom = -100.0
-action = "use_mana_potion"
-icon = ExtResource("12_mp_potion")
-show_count = true
+auto_translate_mode = 2
+text = "[F] Konuş"
 
 [node name="InventoryWindow" parent="Root" instance=ExtResource("14_inventory")]
 unique_name_in_owner = true

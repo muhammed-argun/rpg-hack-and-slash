@@ -17,10 +17,11 @@ Durum etiketleri: **[Karar]** kesinleşti · **[Öneri]** henüz onaylanmadı ·
 - **[Yapılacak]** Sol tık: saldırı (basılı tutunca sürekli)
 - **[Yapılacak]** Yetenekler: E, R, T (3 aktif yuva)
 - **[Yapılacak]** Hızlı kullanım: 1 ve 2. Hangi eşyayı kullanacağı envanterdeki sıraya göre belirlenir (varsayılan: 1 = can iksiri, 2 = mana iksiri).
-- **[Yapılacak]** Blok/parry, yuvarlanma, etkileşim (F), envanter (I), karakter (C, aynı pencere), duraklatma (Esc)
+- **[Karar]** Etkileşim (NPC ile konuşma) ayrı tuş: F. NPC'nin üstünde [F] Konuş ipucu çıkar. Diyalog F, saldırı tuşu ya da tıklamayla ilerler.
+- **[Yapılacak]** Blok/parry, yuvarlanma, envanter (I), karakter (C, aynı pencere), duraklatma (Esc)
 - **[Yapılacak]** Bütün tuşlar ayarlardan değiştirilebilir (klavye ve gamepad).
 - **[Yapılacak]** Özel imleç: Pixel UI Fantasy paketindeki cursor.
-- **[Karar]** Ekrandaki dokunmatik kontroller (joystick, butonlar) PC'de kaldırılacak; kodları mobil port için saklanıyor.
+- **[Karar]** Ekrandaki dokunmatik kontroller (joystick, aksiyon butonları) PC'de kaldırıldı; kodları mobil port için saklanıyor. Sağ üstteki duraklat/çanta/görev butonları fareyle tıklanan normal butonlar.
 
 ## Dünya ve haritalar
 - **[Karar]** Dünya birbirine bağlı ayrı haritalardan oluşur. Her harita ayrı bir sahne; kenarlardaki çıkışlar diğer haritalara bağlanır.

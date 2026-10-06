@@ -2,6 +2,7 @@ class_name TutorialHints
 extends PanelContainer
 ## İlk oyunda sırayla gösterilen öğretici ipuçları. Her ipucu, oyuncu o hareketi bir kez
 ## yapınca kaybolur ve "tutorial_<id>" bayrağıyla kaydedilir (bir daha gösterilmez).
+## Metinlerdeki {aksiyon} yer tutucuları o aksiyonun güncel tuşuyla doldurulur (ör. {interact} → F).
 
 # [id, metin anahtarı, gösterilme koşulu]
 const HINTS := [
@@ -15,6 +16,7 @@ const HINTS := [
 
 var _label: Label
 var _current := ""
+var _current_key := ""
 var _start_position := Vector2.INF
 var _check_timer := 0.0
 
@@ -28,7 +30,9 @@ func _ready() -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.custom_minimum_size = Vector2(220, 0)
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	add_child(_label)
+	Settings.changed.connect(_refresh_text)
 	Dialogue.dialogue_finished.connect(func(_npc: String, _dialogue: String) -> void: _complete("talk"))
 	hide()
 
@@ -87,8 +91,9 @@ func _condition_met(condition: String) -> bool:
 
 func _show(id: String, key: String) -> void:
 	_current = id
+	_current_key = key
 	_start_position = Vector2.INF
-	_label.text = key
+	_refresh_text()
 	show()
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.3)
@@ -96,7 +101,12 @@ func _show(id: String, key: String) -> void:
 	reset_size()
 	await get_tree().process_frame
 	reset_size()
-	position = Vector2((get_viewport_rect().size.x - size.x) / 2.0, get_viewport_rect().size.y - size.y - 62.0)
+	position = Vector2((get_viewport_rect().size.x - size.x) / 2.0, get_viewport_rect().size.y - size.y - 16.0)
+
+
+func _refresh_text() -> void:
+	if not _current_key.is_empty():
+		_label.text = Settings.format_action_keys(tr(_current_key))
 
 
 func _complete(id: String) -> void:

@@ -2,6 +2,15 @@
 
 Her kayıt: tarih, karar/ders, kısa gerekçe. En yeni kayıt en üste eklenir.
 
+## 2026-10-06 — PC geçişi 3.1: dokunmatik kontroller kaldırıldı
+- HUD'dan TouchJoystick ve ActionButtons (saldırı, yetenek, blok, yuvarlanma, iksir butonları) çıkarıldı. Scriptler ve ction_button.tscn duruyor (mobil port için).
+- Duraklat/çanta/görev butonları normal Button oldu (ocus_mode = none, klavye/gamepad odağını çalmasınlar diye).
+- emulate_touch_from_mouse kapatıldı.
+- Yeni aksiyon interact (F). Konuşma artık saldırı tuşuyla değil bununla başlar; NPC yanında saldırı tuşu saldırır. Diyalog ve hikâye kartı hem interact hem ttack ile ilerler; bitince ikisi de bırakılır (yoksa aynı karede konuşma yeniden başlıyor).
+- Tuş adları metne gömülmüyor: Settings.get_action_key_label(aksiyon) ve Settings.format_action_keys("... {interact} ...") güncel atamadan okuyor. 3.2'deki tuş atama ekranından sonra ipuçları kendiliğinden doğru tuşu gösterecek. Fiziksel tuş kodu, kullanıcının klavye düzenindeki harfe çevriliyor.
+- Ders: Boss testi, prolog eklendikten sonra bozulmuştu. Yeni oyunda prolog hikâye kartı oyunu duraklatıyor ve hiçbir boss uyanmıyordu. Testte `intro_seen` bayrağı önceden konuyor. Yeni oyun başlatan her araç bunu hesaba katmalı.
+- Geçici eksik: iksir sayıları ve yetenek bekleme süresi HUD'da görünmüyor (butonlarla gitti). 3.4'teki yetenek çubuğu ve hızlı kullanım yuvalarıyla geri gelecek.
+
 ## 2026-10-06 — PC'ye geçiş kararı
 - **Platform PC (Windows) oldu**; Steam Deck ve gamepad desteklenecek. Mobil (Android) ileride port olarak gelebilir.
 - Ekrandaki dokunmatik kontroller kaldırılacak. Kodları (`TouchJoystick`, `ActionButton`) mobil port için saklanıyor.
